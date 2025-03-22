@@ -1,0 +1,122 @@
+.cube-container-swag {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px auto;
+    padding: 20px;
+    background: linear-gradient(135deg, #007bff, #ffa500); /* Blue to Orange */
+    border-radius: 20px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.cube-container-swag:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.move-input-swag {
+    display: block;
+    width: 80%;
+    height: 150px; /* Adjust height for larger input */
+    margin: 15px auto;
+    padding: 12px;
+    font-size: 1.3rem;
+    border: 2px solid #ffa500; /* Orange */
+    border-radius: 10px;
+    outline: none;
+    background: #fff;
+    resize: vertical; /* Allow resizing vertically */
+    transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+    text-align: left; /* Align text to the left */
+    vertical-align: top; /* Align text to the top */
+    overflow-y: auto; /* Enable vertical scrolling if needed */
+}
+
+.move-input-swag:focus {
+    border-color: #007bff; /* Blue */
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.6); /* Blue glow */
+    background-color: #f0f8ff; /* Light blue background */
+}
+
+.move-input-swag::placeholder {
+    color: #ffa500; /* Orange */
+    opacity: 0.8;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #e3f2fd, #fffaf0); /* Light blue to light orange */
+    color: #333;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+input:focus, button:focus {
+    outline: none;
+}
+
+.scramble-container-swag {
+    font-family: Arial, sans-serif;
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-align: center;
+    margin: 10px 0;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+    margin: 10px auto;
+    border: 2px solid #007bff; /* Blue border */
+    border-radius: 10px;
+    background: #f9f9f9; /* Light background */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 600px;
+}
+
+.scramble-label-swag {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #007bff; /* Blue text */
+    margin-bottom: 5px;
+}
+
+#scramble-text {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+    text-align: center;
+}
+
+.toast-swag {
+    visibility: hidden;
+    min-width: 250px;
+    margin: 0 auto;
+    background-color: #ff4d4d; /* Red background for error */
+    color: white;
+    text-align: center;
+    border-radius: 5px;
+    padding: 10px;
+    position: fixed;
+    z-index: 1;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    font-size: 1rem;
+    transition: visibility 0s, opacity 0.5s ease-in-out;
+    opacity: 0;
+}
+
+.toast-swag.show {
+    visibility: visible;
+    opacity: 1;
+}

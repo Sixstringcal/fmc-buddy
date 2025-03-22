@@ -1,0 +1,16 @@
+{
+  "type": "module",
+  "scripts": {
+    "build": "node script/build.js",
+    "dev": "node script/build.js -- --dev",
+    "clean": "rm -rf ./dist",
+    "upgrade-cubing": "npm install --save cubing@latest"
+  },
+  "dependencies": {
+    "cubing": "^0.54.4"
+  },
+  "devDependencies": {
+    "barely-a-dev-server": "^0.7.0",
+    "http-server": "^14.1.1"
+  }
+}
