@@ -37,8 +37,18 @@ export class CubeView {
             cubeContainer.classList.add("cube-container");
             document.body.appendChild(cubeContainer);
         }
-        cubeContainer.appendChild(this.twistyPlayer);
 
+        // Create a wrapper for the column layout
+        const columnWrapperId = `${this.containerId}-column-wrapper`;
+        let columnWrapper = document.getElementById(columnWrapperId);
+        if (!columnWrapper) {
+            columnWrapper = document.createElement("div");
+            columnWrapper.id = columnWrapperId;
+            columnWrapper.classList.add("column-wrapper");
+            cubeContainer.appendChild(columnWrapper);
+        }
+
+        // Add toggle button
         const toggleButtonId = `${this.containerId}-toggle-button`;
         let toggleButton = document.getElementById(toggleButtonId) as HTMLButtonElement;
         if (!toggleButton) {
@@ -47,8 +57,21 @@ export class CubeView {
             toggleButton.textContent = "Normal";
             toggleButton.classList.add("toggle-button", "button");
             toggleButton.addEventListener("click", () => this.toggleMode(toggleButton));
-            cubeContainer.appendChild(toggleButton);
+            columnWrapper.appendChild(toggleButton);
         }
+
+        // Add move input
+        const moveInputId = `${this.containerId}-move-input`;
+        let moveInput = document.getElementById(moveInputId) as HTMLTextAreaElement;
+        if (!moveInput) {
+            moveInput = document.createElement("textarea");
+            moveInput.id = moveInputId;
+            moveInput.classList.add("move-input");
+            columnWrapper.appendChild(moveInput);
+        }
+
+        // Add the twisty player to the left of the column
+        cubeContainer.insertBefore(this.twistyPlayer, columnWrapper);
 
         const splitScramble = this.scramble.split(" ");
         splitScramble.forEach((move) => {
@@ -145,8 +168,13 @@ export class CubeView {
             .join(" ");
     }
 
+    private fixApostrophe(moves: string): string {
+        return moves.replaceAll("‘", "'")
+    }
+
     private applyMoves(moves: string, fromInverseButton: boolean) {
         moves = this.removeComments(moves);
+        moves = this.fixApostrophe(moves);
         if (fromInverseButton || moves !== this.previousMoves) {
             if (this.isNormal) {
                 this.previousMoves = moves;

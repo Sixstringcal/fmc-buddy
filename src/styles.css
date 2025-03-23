@@ -1,5 +1,6 @@
 .cube-container {
   display: flex;
+  flex-direction: row;
   justify-content: center;
   align-items: center;
   margin: 20px auto;
@@ -129,7 +130,7 @@ button:focus {
 }
 
 .button {
-  background-color: #007bff; /* Blue background for Normal */
+  background-color: #007bff;
   border: none;
   color: white;
   padding: 10px 20px;
@@ -146,10 +147,18 @@ button:focus {
 }
 
 .button:hover {
-  background-color: #0056b3; /* Darker blue on hover */
-  transform: scale(1.05); /* Slightly enlarge on hover */
+  background-color: #0056b3;
+  transform: scale(1.05);
 }
 
 .button:active {
-  transform: scale(0.95); /* Slightly shrink on click */
+  transform: scale(0.95);
+}
+
+.column-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: fit-content;
+  align-items: center;
 }
