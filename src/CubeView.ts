@@ -7,6 +7,9 @@ const validMoves = new Set([
     "Dw", "Dw'", "Dw2", "Bw", "Bw'", "Bw2", "Fw", "Fw'", "Fw2"
 ]);
 
+const blue = "#007bff";
+const orange = "#ffa500";
+
 export class CubeView {
     private scramble: string;
     private inverseMoves: string = "";
@@ -14,6 +17,7 @@ export class CubeView {
     private twistyPlayer: TwistyPlayer;
     private previousMoves: string = "";
     private containerId: string;
+    private isNormal: boolean = true;
 
     constructor(scramble: string, containerId: string) {
         this.scramble = scramble;
@@ -35,12 +39,30 @@ export class CubeView {
         }
         cubeContainer.appendChild(this.twistyPlayer);
 
+        const toggleButtonId = `${this.containerId}-toggle-button`;
+        let toggleButton = document.getElementById(toggleButtonId) as HTMLButtonElement;
+        if (!toggleButton) {
+            toggleButton = document.createElement("button");
+            toggleButton.id = toggleButtonId;
+            toggleButton.textContent = "Normal";
+            toggleButton.classList.add("toggle-button", "button");
+            toggleButton.addEventListener("click", () => this.toggleMode(toggleButton));
+            cubeContainer.appendChild(toggleButton);
+        }
+
         const splitScramble = this.scramble.split(" ");
         splitScramble.forEach((move) => {
             this.twistyPlayer.experimentalAddMove(move);
         });
 
         this.initializeMoveInput();
+    }
+
+    private toggleMode(button: HTMLButtonElement) {
+        this.isNormal = !this.isNormal;
+        button.textContent = this.isNormal ? "Normal" : "Inverse";
+        button.style.backgroundColor = this.isNormal ? blue : orange;
+        this.applyMoves(this.previousMoves.trim(), true);
     }
 
     private initializeMoveInput() {
@@ -56,7 +78,7 @@ export class CubeView {
             }
         }
 
-        moveInput.addEventListener("input", () => this.applyMoves(moveInput.value.trim()));
+        moveInput.addEventListener("input", () => this.applyMoves(moveInput.value.trim(), false));
     }
 
     private separateMoves(moves: string) {
@@ -65,6 +87,15 @@ export class CubeView {
 
         let isInGroup = false;
         let groupBuffer = "";
+
+        if (moves.trim() == "") {
+            if (this.isNormal) {
+                this.twistyPlayer.alg = this.scramble;
+            } else {
+                this.twistyPlayer.alg = this.invertMoves(this.scramble);
+            }
+            return;
+        }
 
         const moveList = moves.split(" ");
         moveList.forEach((move) => {
@@ -114,40 +145,75 @@ export class CubeView {
             .join(" ");
     }
 
-    private applyMoves(moves: string) {
+    private applyMoves(moves: string, fromInverseButton: boolean) {
         moves = this.removeComments(moves);
-        if (moves !== this.previousMoves) {
-            this.previousMoves = moves;
-            this.twistyPlayer.alg = "";
-            this.separateMoves(moves);
+        if (fromInverseButton || moves !== this.previousMoves) {
+            if (this.isNormal) {
+                this.previousMoves = moves;
+                this.twistyPlayer.alg = "";
+                this.separateMoves(moves);
 
-            if (this.inverseMoves) {
-                let invertedMoves = this.invertMoves(this.inverseMoves).split(" ");
-                invertedMoves.forEach((move) => {
-                    if (validMoves.has(move)) {
-                        this.twistyPlayer.experimentalAddMove(move);
-                    }
-                });
-            }
+                if (this.inverseMoves) {
+                    let invertedMoves = this.invertMoves(this.inverseMoves).split(" ");
+                    invertedMoves.forEach((move) => {
+                        if (validMoves.has(move)) {
+                            this.twistyPlayer.experimentalAddMove(move);
+                        }
+                    });
+                }
 
-            if (this.scramble) {
-                const scrambleMoves = this.scramble.split(" ");
-                scrambleMoves.forEach((move) => {
-                    if (validMoves.has(move)) {
-                        this.twistyPlayer.experimentalAddMove(move);
-                    }
-                });
-            }
+                if (this.scramble) {
+                    const scrambleMoves = this.scramble.split(" ");
+                    scrambleMoves.forEach((move) => {
+                        if (validMoves.has(move)) {
+                            this.twistyPlayer.experimentalAddMove(move);
+                        }
+                    });
+                }
 
-            if (this.normalMoves) {
-                const userMoves = this.normalMoves.split(" ");
-                userMoves.forEach((move) => {
-                    if (validMoves.has(move)) {
-                        this.twistyPlayer.experimentalAddMove(move);
-                    } else {
-                        this.showToast(`Invalid move: ${move}`);
-                    }
-                });
+                if (this.normalMoves) {
+                    const userMoves = this.normalMoves.split(" ");
+                    userMoves.forEach((move) => {
+                        if (validMoves.has(move)) {
+                            this.twistyPlayer.experimentalAddMove(move);
+                        } else {
+                            this.showToast(`Invalid move: ${move}`);
+                        }
+                    });
+                }
+            } else {
+                this.previousMoves = moves;
+                this.twistyPlayer.alg = "";
+                this.separateMoves(moves);
+
+                if (this.normalMoves) {
+                    let invertedMoves = this.invertMoves(this.normalMoves).split(" ");
+                    invertedMoves.forEach((move) => {
+                        if (validMoves.has(move)) {
+                            this.twistyPlayer.experimentalAddMove(move);
+                        }
+                    });
+                }
+
+                if (this.scramble) {
+                    const scrambleMoves = this.invertMoves(this.scramble).split(" ");
+                    scrambleMoves.forEach((move) => {
+                        if (validMoves.has(move)) {
+                            this.twistyPlayer.experimentalAddMove(move);
+                        }
+                    });
+                }
+
+                if (this.inverseMoves) {
+                    const userMoves = this.inverseMoves.split(" ");
+                    userMoves.forEach((move) => {
+                        if (validMoves.has(move)) {
+                            this.twistyPlayer.experimentalAddMove(move);
+                        } else {
+                            this.showToast(`Invalid move: ${move}`);
+                        }
+                    });
+                }
             }
         }
     }
