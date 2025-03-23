@@ -9,7 +9,8 @@ const validMoves = new Set([
 
 export class CubeView {
     private scramble: string;
-    private inverse: string = "";
+    private inverseMoves: string = "";
+    private normalMoves: string = "";
     private twistyPlayer: TwistyPlayer;
     private previousMoves: string = "";
     private containerId: string;
@@ -63,7 +64,7 @@ export class CubeView {
             if (moves !== this.previousMoves) { // Only process if the trimmed value has changed
                 this.previousMoves = moves;
                 this.twistyPlayer.alg = ""; // Clear the algorithm in the player
-                this.inverse = ""; // Reset the inverse string
+                this.inverseMoves = ""; // Reset the inverse string
 
                 // Add scramble moves first
                 if (this.scramble) {
@@ -79,13 +80,7 @@ export class CubeView {
                 if (moves) {
                     const userMoves = moves.split(" ");
                     userMoves.forEach((move) => {
-                        if (move.startsWith("(") && move.endsWith(")")) {
-                            // Extract moves inside parentheses and append to inverse
-                            const sequence = move.slice(1, -1).trim();
-                            if (sequence) {
-                                this.inverse += (this.inverse ? " " : "") + sequence;
-                            }
-                        } else if (validMoves.has(move)) {
+                        if (validMoves.has(move)) {
                             this.twistyPlayer.experimentalAddMove(move);
                         } else {
                             this.showToast(`Invalid move: ${move}`);
