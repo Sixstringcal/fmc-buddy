@@ -2,6 +2,7 @@ import { randomScrambleForEvent } from "cubing/scramble";
 import { CubeView } from "./CubeView";
 
 let scramble: string = "";
+let cubeViewCount = 0;
 
 document.addEventListener("DOMContentLoaded", async () => {
     let scrambleContainer = document.getElementById("scramble-container");
@@ -28,7 +29,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         scrambleText.textContent = scramble;
     }
 
-    const cubeView = new CubeView(scramble, "cube-container-1");
+    // Add "+" button to create new CubeViews
+    const addButton = document.createElement("button");
+    addButton.textContent = "+";
+    addButton.classList.add("add-button");
+    addButton.addEventListener("click", async () => {
+        cubeViewCount++;
+        const cubeView = new CubeView(scramble, `cube-container-${cubeViewCount}`);
+        cubeView.initialize();
+    });
+    document.body.appendChild(addButton);
+
+    // Initialize the first CubeView
+    cubeViewCount++;
+    const cubeView = new CubeView(scramble, `cube-container-${cubeViewCount}`);
     cubeView.initialize();
 });
 
