@@ -59,11 +59,65 @@ export class CubeView {
         moveInput.addEventListener("input", () => this.applyMoves(moveInput.value.trim()));
     }
 
+    private separateMoves(moves: string) {
+        this.normalMoves = "";
+        this.inverseMoves = "";
+
+        let isInGroup = false;
+        let groupBuffer = "";
+
+        const moveList = moves.split(" ");
+        moveList.forEach((move) => {
+            if (move.startsWith("(")) {
+                isInGroup = true;
+                groupBuffer = move.slice(1);
+            } else if (move.endsWith(")") && isInGroup) {
+                groupBuffer += " " + move.slice(0, -1);
+                this.inverseMoves += (this.inverseMoves ? " " : "") + groupBuffer.trim();
+                groupBuffer = "";
+                isInGroup = false;
+            } else if (isInGroup) {
+                groupBuffer += " " + move;
+            } else {
+                if (validMoves.has(move)) {
+                    this.normalMoves += (this.normalMoves ? " " : "") + move;
+                }
+            }
+        });
+        if (isInGroup && groupBuffer) {
+            this.inverseMoves += (this.inverseMoves ? " " : "") + groupBuffer.trim();
+        }
+    }
+
+    private invertMoves(moves: string): string {
+        let inverseMoves = "";
+        const moveList = moves.split(" ");
+        moveList.forEach((move) => {
+            if (move.endsWith("' ")) {
+                inverseMoves += move.slice(0, -1);
+            } else if (move.endsWith("2 ")) {
+                inverseMoves += move;
+            } else {
+                inverseMoves += move + "' ";
+            }
+        });
+        return inverseMoves.trim().split(" ").reverse().join(" ");
+    }
+
     private applyMoves(moves: string) {
         if (moves !== this.previousMoves) {
             this.previousMoves = moves;
             this.twistyPlayer.alg = "";
-            this.inverseMoves = "";
+            this.separateMoves(moves);
+
+            if (this.inverseMoves) {
+                let invertedMoves = this.invertMoves(this.inverseMoves).split(" ");
+                invertedMoves.forEach((move) => {
+                    if (validMoves.has(move)) {
+                        this.twistyPlayer.experimentalAddMove(move);
+                    }
+                });
+            }
 
             if (this.scramble) {
                 const scrambleMoves = this.scramble.split(" ");
@@ -74,8 +128,8 @@ export class CubeView {
                 });
             }
 
-            if (moves) {
-                const userMoves = moves.split(" ");
+            if (this.normalMoves) {
+                const userMoves = this.normalMoves.split(" ");
                 userMoves.forEach((move) => {
                     if (validMoves.has(move)) {
                         this.twistyPlayer.experimentalAddMove(move);
