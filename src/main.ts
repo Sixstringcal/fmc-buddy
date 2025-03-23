@@ -4,7 +4,6 @@ import { CubeView } from "./CubeView";
 let scramble: string = "";
 let cubeViewCount = 0;
 
-// Add a loading spinner to the page
 const addLoadingSpinner = () => {
     const spinner = document.createElement("div");
     spinner.id = "loading-spinner";
@@ -12,7 +11,6 @@ const addLoadingSpinner = () => {
     document.body.appendChild(spinner);
 };
 
-// Remove the loading spinner from the page
 const removeLoadingSpinner = () => {
     const spinner = document.getElementById("loading-spinner");
     if (spinner) {
@@ -20,7 +18,6 @@ const removeLoadingSpinner = () => {
     }
 };
 
-// Prepare everything before the DOM loads
 (async () => {
     addLoadingSpinner();
 
@@ -42,7 +39,6 @@ const removeLoadingSpinner = () => {
 
     document.body.prepend(scrambleContainer);
 
-    // Add "+" button to create new CubeViews
     const addButton = document.createElement("button");
     addButton.textContent = "+";
     addButton.classList.add("add-button");
@@ -53,7 +49,6 @@ const removeLoadingSpinner = () => {
     });
     document.body.appendChild(addButton);
 
-    // Initialize the first CubeView
     cubeViewCount++;
     const cubeView = new CubeView(scramble, `cube-container-${cubeViewCount}`);
     cubeView.initialize();
