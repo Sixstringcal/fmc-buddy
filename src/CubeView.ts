@@ -68,7 +68,9 @@ export class CubeView {
 
         const moveList = moves.split(" ");
         moveList.forEach((move) => {
-            if (move.startsWith("(")) {
+            if (move.startsWith("(") && move.endsWith(")")) {
+                this.inverseMoves += (this.inverseMoves ? " " : "") + move.slice(1, -1);
+            } else if (move.startsWith("(")) {
                 isInGroup = true;
                 groupBuffer = move.slice(1);
             } else if (move.endsWith(")") && isInGroup) {
