@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const scrambleText = document.getElementById("scramble-text");
     if (scrambleText) {
-        scramble = (await randomScrambleForEvent("333")).toString();
+        scramble = (await randomScrambleForEvent("333fm")).toString();
         scrambleText.textContent = scramble;
     }
 
