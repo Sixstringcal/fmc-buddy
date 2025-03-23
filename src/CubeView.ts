@@ -17,7 +17,7 @@ export class CubeView {
 
     constructor(scramble: string, containerId: string) {
         this.scramble = scramble;
-        this.containerId = containerId; // Unique container ID for this instance
+        this.containerId = containerId;
         this.twistyPlayer = new TwistyPlayer({
             puzzle: "3x3x3",
             background: "none",
@@ -26,23 +26,20 @@ export class CubeView {
     }
 
     initialize() {
-        // Ensure cube container exists for this instance
         let cubeContainer = document.getElementById(this.containerId);
         if (!cubeContainer) {
             cubeContainer = document.createElement("div");
             cubeContainer.id = this.containerId;
-            cubeContainer.classList.add("cube-container-swag"); // Add styling class
+            cubeContainer.classList.add("cube-container");
             document.body.appendChild(cubeContainer);
         }
         cubeContainer.appendChild(this.twistyPlayer);
 
-        // Apply scramble moves
         const splitScramble = this.scramble.split(" ");
         splitScramble.forEach((move) => {
             this.twistyPlayer.experimentalAddMove(move);
         });
 
-        // Initialize move input listener
         this.initializeMoveInput();
     }
 
@@ -52,43 +49,42 @@ export class CubeView {
         if (!moveInput) {
             moveInput = document.createElement("textarea");
             moveInput.id = moveInputId;
-            moveInput.classList.add("move-input-swag"); // Add styling class
+            moveInput.classList.add("move-input");
             const cubeContainer = document.getElementById(this.containerId);
             if (cubeContainer) {
                 cubeContainer.appendChild(moveInput);
             }
         }
 
-        moveInput.addEventListener("input", () => {
-            const moves = moveInput.value.trim();
-            if (moves !== this.previousMoves) { // Only process if the trimmed value has changed
-                this.previousMoves = moves;
-                this.twistyPlayer.alg = ""; // Clear the algorithm in the player
-                this.inverseMoves = ""; // Reset the inverse string
+        moveInput.addEventListener("input", () => this.applyMoves(moveInput.value.trim()));
+    }
 
-                // Add scramble moves first
-                if (this.scramble) {
-                    const scrambleMoves = this.scramble.split(" ");
-                    scrambleMoves.forEach((move) => {
-                        if (validMoves.has(move)) {
-                            this.twistyPlayer.experimentalAddMove(move);
-                        }
-                    });
-                }
+    private applyMoves(moves: string) {
+        if (moves !== this.previousMoves) {
+            this.previousMoves = moves;
+            this.twistyPlayer.alg = "";
+            this.inverseMoves = "";
 
-                // Add user input moves
-                if (moves) {
-                    const userMoves = moves.split(" ");
-                    userMoves.forEach((move) => {
-                        if (validMoves.has(move)) {
-                            this.twistyPlayer.experimentalAddMove(move);
-                        } else {
-                            this.showToast(`Invalid move: ${move}`);
-                        }
-                    });
-                }
+            if (this.scramble) {
+                const scrambleMoves = this.scramble.split(" ");
+                scrambleMoves.forEach((move) => {
+                    if (validMoves.has(move)) {
+                        this.twistyPlayer.experimentalAddMove(move);
+                    }
+                });
             }
-        });
+
+            if (moves) {
+                const userMoves = moves.split(" ");
+                userMoves.forEach((move) => {
+                    if (validMoves.has(move)) {
+                        this.twistyPlayer.experimentalAddMove(move);
+                    } else {
+                        this.showToast(`Invalid move: ${move}`);
+                    }
+                });
+            }
+        }
     }
 
     private showToast(message: string) {
@@ -97,7 +93,7 @@ export class CubeView {
         if (!toast) {
             toast = document.createElement("div");
             toast.id = toastId;
-            toast.classList.add("toast-swag");
+            toast.classList.add("toast");
             const cubeContainer = document.getElementById(this.containerId);
             if (cubeContainer) {
                 cubeContainer.appendChild(toast);
