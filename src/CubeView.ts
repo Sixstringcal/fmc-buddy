@@ -106,7 +106,16 @@ export class CubeView {
         return inverseMoves.trim().split(" ").reverse().join(" ");
     }
 
+    private removeComments(moves): string {
+        return moves
+            .split("\n")
+            .map((line) => line.split("/")[0].trim())
+            .filter((line) => line.length > 0)
+            .join(" ");
+    }
+
     private applyMoves(moves: string) {
+        moves = this.removeComments(moves);
         if (moves !== this.previousMoves) {
             this.previousMoves = moves;
             this.twistyPlayer.alg = "";
