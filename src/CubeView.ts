@@ -12,9 +12,11 @@ export class CubeView {
     private inverse: string = "";
     private twistyPlayer: TwistyPlayer;
     private previousMoves: string = "";
+    private containerId: string;
 
-    constructor(scramble: string) {
+    constructor(scramble: string, containerId: string) {
         this.scramble = scramble;
+        this.containerId = containerId; // Unique container ID for this instance
         this.twistyPlayer = new TwistyPlayer({
             puzzle: "3x3x3",
             background: "none",
@@ -23,11 +25,11 @@ export class CubeView {
     }
 
     initialize() {
-        // Ensure cube container exists
-        let cubeContainer = document.getElementById("cube-container");
+        // Ensure cube container exists for this instance
+        let cubeContainer = document.getElementById(this.containerId);
         if (!cubeContainer) {
             cubeContainer = document.createElement("div");
-            cubeContainer.id = "cube-container";
+            cubeContainer.id = this.containerId;
             cubeContainer.classList.add("cube-container-swag"); // Add styling class
             document.body.appendChild(cubeContainer);
         }
@@ -44,10 +46,17 @@ export class CubeView {
     }
 
     private initializeMoveInput() {
-        const moveInput = document.getElementById("move-input") as HTMLTextAreaElement;
-        if (!moveInput) return;
-
-        moveInput.classList.add("move-input-swag"); // Add styling class
+        const moveInputId = `${this.containerId}-move-input`;
+        let moveInput = document.getElementById(moveInputId) as HTMLTextAreaElement;
+        if (!moveInput) {
+            moveInput = document.createElement("textarea");
+            moveInput.id = moveInputId;
+            moveInput.classList.add("move-input-swag"); // Add styling class
+            const cubeContainer = document.getElementById(this.containerId);
+            if (cubeContainer) {
+                cubeContainer.appendChild(moveInput);
+            }
+        }
 
         moveInput.addEventListener("input", () => {
             const moves = moveInput.value.trim();
@@ -88,12 +97,16 @@ export class CubeView {
     }
 
     private showToast(message: string) {
-        let toast = document.getElementById("toast");
+        const toastId = `${this.containerId}-toast`;
+        let toast = document.getElementById(toastId);
         if (!toast) {
             toast = document.createElement("div");
-            toast.id = "toast";
+            toast.id = toastId;
             toast.classList.add("toast-swag");
-            document.body.appendChild(toast);
+            const cubeContainer = document.getElementById(this.containerId);
+            if (cubeContainer) {
+                cubeContainer.appendChild(toast);
+            }
         }
         toast.textContent = message;
         toast.classList.add("show");

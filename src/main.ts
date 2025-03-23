@@ -30,8 +30,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         scrambleText.textContent = scramble; // Display scramble
     }
 
-    // Initialize CubeView component
-    const cubeView = new CubeView(scramble);
+    // Initialize CubeView component with a unique container ID
+    const cubeView = new CubeView(scramble, "cube-container-1");
     cubeView.initialize();
 });
 
