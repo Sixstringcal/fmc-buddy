@@ -193,7 +193,6 @@ export class CubeView {
 
                 if (this.inverseMoves) {
                     let invertedMoves = this.invertMoves(this.inverseMoves).split(" ");
-                    console.log(invertedMoves);
                     invertedMoves.forEach((move) => {
                         if (validMoves.has(move)) {
                             this.twistyPlayer.experimentalAddMove(move);
