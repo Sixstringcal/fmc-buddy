@@ -107,7 +107,18 @@ export class CubeView {
             }
         }
 
-        moveInput.addEventListener("input", () => this.applyMoves(moveInput.value.trim(), false));
+        moveInput.addEventListener("input", (event) => {
+            const input = event.target as HTMLTextAreaElement;
+            const cursorPosition = input.selectionStart;
+
+            // Check if the last entered character is "("
+            if (input.value[cursorPosition - 1] === "(") {
+                input.value = input.value.slice(0, cursorPosition) + ")" + input.value.slice(cursorPosition);
+                input.selectionStart = input.selectionEnd = cursorPosition; // Move cursor back inside the parentheses
+            }
+
+            this.applyMoves(input.value.trim(), false);
+        });
     }
 
     private separateMoves(moves: string) {
