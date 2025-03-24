@@ -177,7 +177,12 @@ export class CubeView {
         moves = this.fixApostrophe(moves);
         if (moves.trim() == "") {
             this.previousMoves = moves;
-            this.twistyPlayer.alg = this.scramble;
+            if (this.isNormal) {
+                this.twistyPlayer.alg = this.scramble;
+            }
+            else {
+                this.twistyPlayer.alg = this.invertMoves(this.scramble)
+            }
             return;
         }
         if (fromInverseButton || moves !== this.previousMoves) {
