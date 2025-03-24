@@ -149,10 +149,10 @@ export class CubeView {
         let inverseMoves = "";
         const moveList = moves.split(" ");
         moveList.forEach((move) => {
-            if (move.endsWith("' ")) {
-                inverseMoves += move.slice(0, -1);
-            } else if (move.endsWith("2 ")) {
-                inverseMoves += move;
+            if (move.endsWith("'")) {
+                inverseMoves += move.slice(0, -1) + " ";
+            } else if (move.endsWith("2")) {
+                inverseMoves += move + " ";
             } else {
                 inverseMoves += move + "' ";
             }
@@ -193,6 +193,7 @@ export class CubeView {
 
                 if (this.inverseMoves) {
                     let invertedMoves = this.invertMoves(this.inverseMoves).split(" ");
+                    console.log(invertedMoves);
                     invertedMoves.forEach((move) => {
                         if (validMoves.has(move)) {
                             this.twistyPlayer.experimentalAddMove(move);
@@ -210,7 +211,6 @@ export class CubeView {
                 }
 
                 if (this.normalMoves) {
-                    console.log("asdf")
                     const userMoves = this.normalMoves.split(" ");
                     userMoves.forEach((move) => {
                         if (validMoves.has(move)) {
