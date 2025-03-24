@@ -38,7 +38,6 @@ export class CubeView {
             document.body.appendChild(cubeContainer);
         }
 
-        // Create a wrapper for the column layout
         const columnWrapperId = `${this.containerId}-column-wrapper`;
         let columnWrapper = document.getElementById(columnWrapperId);
         if (!columnWrapper) {
@@ -48,7 +47,16 @@ export class CubeView {
             cubeContainer.appendChild(columnWrapper);
         }
 
-        // Add toggle button
+        const moveCounterId = `${this.containerId}-move-counter`;
+        let moveCounter = document.getElementById(moveCounterId) as HTMLDivElement;
+        if (!moveCounter) {
+            moveCounter = document.createElement("div");
+            moveCounter.id = moveCounterId;
+            moveCounter.classList.add("move-counter");
+            moveCounter.textContent = "Moves: 0";
+            columnWrapper.appendChild(moveCounter);
+        }
+
         const toggleButtonId = `${this.containerId}-toggle-button`;
         let toggleButton = document.getElementById(toggleButtonId) as HTMLButtonElement;
         if (!toggleButton) {
@@ -60,7 +68,6 @@ export class CubeView {
             columnWrapper.appendChild(toggleButton);
         }
 
-        // Add move input
         const moveInputId = `${this.containerId}-move-input`;
         let moveInput = document.getElementById(moveInputId) as HTMLTextAreaElement;
         if (!moveInput) {
@@ -70,7 +77,6 @@ export class CubeView {
             columnWrapper.appendChild(moveInput);
         }
 
-        // Add the twisty player to the left of the column
         cubeContainer.insertBefore(this.twistyPlayer, columnWrapper);
 
         const splitScramble = this.scramble.split(" ");
@@ -183,6 +189,7 @@ export class CubeView {
             else {
                 this.twistyPlayer.alg = this.invertMoves(this.scramble)
             }
+            this.updateMoveCounter();
             return;
         }
         if (fromInverseButton || moves !== this.previousMoves) {
@@ -253,6 +260,17 @@ export class CubeView {
                     });
                 }
             }
+            this.updateMoveCounter();
+        }
+    }
+
+    private updateMoveCounter() {
+        const moveCounter = document.getElementById(`${this.containerId}-move-counter`) as HTMLDivElement;
+        if (moveCounter) {
+            const normalMoveCount = this.normalMoves.trim().split(/\s+/).filter((move) => validMoves.has(move)).length;
+            const inverseMoveCount = this.inverseMoves.trim().split(/\s+/).filter((move) => validMoves.has(move)).length;
+            const totalMoves = normalMoveCount + inverseMoveCount;
+            moveCounter.textContent = `Moves: ${totalMoves}`;
         }
     }
 
