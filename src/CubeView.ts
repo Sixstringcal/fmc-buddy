@@ -175,6 +175,11 @@ export class CubeView {
     private applyMoves(moves: string, fromInverseButton: boolean) {
         moves = this.removeComments(moves);
         moves = this.fixApostrophe(moves);
+        if (moves.trim() == "") {
+            this.previousMoves = moves;
+            this.twistyPlayer.alg = this.scramble;
+            return;
+        }
         if (fromInverseButton || moves !== this.previousMoves) {
             if (this.isNormal) {
                 this.previousMoves = moves;
@@ -200,6 +205,7 @@ export class CubeView {
                 }
 
                 if (this.normalMoves) {
+                    console.log("asdf")
                     const userMoves = this.normalMoves.split(" ");
                     userMoves.forEach((move) => {
                         if (validMoves.has(move)) {
