@@ -79,6 +79,31 @@ export class CubeView {
                     document.body.style.cursor = "default";
                 }
             });
+
+            dragIcon.addEventListener("touchstart", (event) => {
+                isDragging = true;
+                const touch = event.touches[0];
+                offsetX = touch.clientX - cubeContainer.getBoundingClientRect().left;
+                offsetY = touch.clientY - cubeContainer.getBoundingClientRect().top;
+                event.preventDefault();
+            });
+
+            document.addEventListener("touchmove", (event) => {
+                if (isDragging) {
+                    const touch = event.touches[0];
+                    cubeContainer.style.left = `${touch.clientX - offsetX}px`;
+                    cubeContainer.style.top = `${touch.clientY - offsetY}px`;
+                    event.preventDefault();
+                }
+            });
+
+            document.addEventListener("touchend", () => {
+                isDragging = false;
+            });
+
+            document.addEventListener("touchcancel", () => {
+                isDragging = false;
+            });
         }
 
         const columnWrapperId = `${this.containerId}-column-wrapper`;
