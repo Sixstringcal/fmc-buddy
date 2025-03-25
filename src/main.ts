@@ -60,6 +60,89 @@ const addEditButton = (scrambleText: HTMLElement, scrambleContainer: HTMLElement
     scrambleContainer.appendChild(editButton);
 };
 
+const loadSvg = async (path: string): Promise<string> => {
+    const response = await fetch(path);
+    if (!response.ok) {
+        throw new Error(`Failed to load SVG: ${path}`);
+    }
+    return await response.text();
+};
+
+const addCountdownTimer = async () => {
+    const timerContainer = document.createElement("div");
+    timerContainer.id = "countdown-timer";
+    timerContainer.classList.add("countdown-timer");
+
+    const timerDisplay = document.createElement("span");
+    timerDisplay.id = "timer-display";
+    timerContainer.appendChild(timerDisplay);
+
+    const timerButton = document.createElement("button");
+    timerButton.id = "timer-button";
+    timerButton.classList.add("timer-button");
+    timerButton.innerHTML = await loadSvg("/assets/play.svg");
+    timerContainer.appendChild(timerButton);
+
+    const restartButton = document.createElement("button");
+    restartButton.id = "restart-button";
+    restartButton.classList.add("timer-button");
+    restartButton.style.display = "none";
+    restartButton.innerHTML = await loadSvg("/assets/restart.svg");
+    timerContainer.appendChild(restartButton);
+
+    document.body.appendChild(timerContainer);
+
+    let remainingTime = 60 * 60;
+    let timerInterval: NodeJS.Timeout | null = null;
+    let isRunning = false;
+
+    const updateTimer = () => {
+        restartButton.style.display = remainingTime < 60 * 60 ? "inline-block" : "none";
+
+        const minutes = Math.floor(remainingTime / 60);
+        const seconds = remainingTime % 60;
+        timerDisplay.textContent = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+
+        if (remainingTime > 0) {
+            remainingTime--;
+        } else {
+            clearInterval(timerInterval!);
+            timerInterval = null;
+            isRunning = false;
+            loadSvg("/assets/play.svg").then((svg) => {
+                timerButton.innerHTML = svg;
+            });
+        }
+    };
+
+    timerButton.addEventListener("click", async () => {
+        if (isRunning) {
+            clearInterval(timerInterval!);
+            timerInterval = null;
+            isRunning = false;
+            timerButton.innerHTML = await loadSvg("/assets/play.svg");
+        } else {
+            if (!timerInterval) {
+                updateTimer();
+                timerInterval = setInterval(updateTimer, 1000);
+            }
+            isRunning = true;
+            timerButton.innerHTML = await loadSvg("/assets/pause.svg");
+        }
+    });
+
+    restartButton.addEventListener("click", async () => {
+        clearInterval(timerInterval!);
+        timerInterval = null;
+        isRunning = false;
+        remainingTime = 60 * 60;
+        updateTimer();
+        timerButton.innerHTML = await loadSvg("/assets/play.svg");
+    });
+
+    updateTimer();
+};
+
 (async () => {
     addLoadingSpinner();
 
@@ -68,7 +151,9 @@ const addEditButton = (scrambleText: HTMLElement, scrambleContainer: HTMLElement
     const scrambleContainer = document.createElement("div");
     scrambleContainer.id = "scramble-container";
     scrambleContainer.classList.add("scramble-container");
-    scrambleContainer.style.position = "relative";
+    scrambleContainer.style.position = "absolute";
+    scrambleContainer.style.top = "0";
+    scrambleContainer.style.left = "0";
 
     const scrambleLabel = document.createElement("div");
     scrambleLabel.textContent = "Scramble:";
@@ -82,7 +167,11 @@ const addEditButton = (scrambleText: HTMLElement, scrambleContainer: HTMLElement
 
     addEditButton(scrambleText, scrambleContainer);
 
-    document.body.prepend(scrambleContainer);
+    document.body.insertBefore(scrambleContainer, document.body.firstChild);
+
+    await addCountdownTimer();
+
+    removeLoadingSpinner();
 
     const addButton = document.createElement("button");
     addButton.textContent = "+";
@@ -99,8 +188,6 @@ const addEditButton = (scrambleText: HTMLElement, scrambleContainer: HTMLElement
     const cubeView = new CubeView(scramble, `cube-container-${cubeViewCount}`);
     cubeView.initialize();
     cubeViews.push(cubeView);
-
-    removeLoadingSpinner();
 })();
 
 export { };

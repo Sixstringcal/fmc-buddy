@@ -10,6 +10,7 @@
     "cubing": "^0.54.4"
   },
   "devDependencies": {
+    "@types/node": "^22.13.13",
     "barely-a-dev-server": "^0.7.0",
     "http-server": "^14.1.1"
   }
