@@ -3,6 +3,9 @@ import { CubeView } from "./CubeView";
 
 let scramble: string = "";
 let cubeViewCount = 0;
+const cubeViews: CubeView[] = [];
+const EDIT_ICON: string = "✏️";
+const CONFIRM_ICON: string = "✔️";
 
 const addLoadingSpinner = () => {
     const spinner = document.createElement("div");
@@ -18,6 +21,45 @@ const removeLoadingSpinner = () => {
     }
 };
 
+const addEditButton = (scrambleText: HTMLElement, scrambleContainer: HTMLElement) => {
+    const editButton = document.createElement("button");
+    editButton.innerHTML = EDIT_ICON;
+    editButton.classList.add("edit-button");
+
+    let isEditing = false;
+
+    const toggleEdit = () => {
+        if (isEditing) {
+            const input = scrambleContainer.querySelector("input") as HTMLInputElement;
+            if (input) {
+                scrambleText.textContent = input.value;
+                scramble = input.value;
+                cubeViews.forEach((cubeView) => cubeView.updateScramble(scramble));
+                input.remove();
+            }
+            editButton.textContent = EDIT_ICON;
+        } else {
+            const input = document.createElement("input");
+            input.type = "text";
+            input.value = scrambleText.textContent || "";
+            input.classList.add("scramble-input");
+            scrambleContainer.insertBefore(input, scrambleText);
+            scrambleText.textContent = "";
+            input.select();
+            input.addEventListener("keydown", (event) => {
+                if (event.key === "Enter") {
+                    toggleEdit();
+                }
+            });
+            editButton.textContent = CONFIRM_ICON;
+        }
+        isEditing = !isEditing;
+    };
+
+    editButton.addEventListener("click", toggleEdit);
+    scrambleContainer.appendChild(editButton);
+};
+
 (async () => {
     addLoadingSpinner();
 
@@ -26,6 +68,7 @@ const removeLoadingSpinner = () => {
     const scrambleContainer = document.createElement("div");
     scrambleContainer.id = "scramble-container";
     scrambleContainer.classList.add("scramble-container");
+    scrambleContainer.style.position = "relative";
 
     const scrambleLabel = document.createElement("div");
     scrambleLabel.textContent = "Scramble:";
@@ -37,6 +80,8 @@ const removeLoadingSpinner = () => {
     scrambleText.textContent = scramble;
     scrambleContainer.appendChild(scrambleText);
 
+    addEditButton(scrambleText, scrambleContainer);
+
     document.body.prepend(scrambleContainer);
 
     const addButton = document.createElement("button");
@@ -46,12 +91,14 @@ const removeLoadingSpinner = () => {
         cubeViewCount++;
         const cubeView = new CubeView(scramble, `cube-container-${cubeViewCount}`);
         cubeView.initialize();
+        cubeViews.push(cubeView);
     });
     document.body.appendChild(addButton);
 
     cubeViewCount++;
     const cubeView = new CubeView(scramble, `cube-container-${cubeViewCount}`);
     cubeView.initialize();
+    cubeViews.push(cubeView);
 
     removeLoadingSpinner();
 })();

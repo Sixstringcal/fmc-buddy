@@ -222,3 +222,48 @@ button:focus {
   margin-bottom: 10px;
   text-align: center;
 }
+
+.edit-button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background-color: #007bff;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.edit-button:hover {
+  background-color: #0056b3;
+}
+
+.scramble-input {
+  width: 100%;
+  padding: 10px;
+  font-size: 1rem;
+  border: 2px solid #007bff;
+  border-radius: 6px;
+  box-sizing: border-box;
+  margin-top: 10px;
+  background-color: #f9f9f9;
+  color: #333;
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    background-color 0.3s ease;
+}
+
+.scramble-input:focus {
+  border-color: #0056b3;
+  box-shadow: 0 0 8px rgba(0, 123, 255, 0.6);
+  background-color: #e3f2fd;
+  outline: none;
+}
+
+.scramble-input::placeholder {
+  color: #aaa;
+  font-style: italic;
+}

@@ -189,6 +189,11 @@ export class CubeView {
         return moves.replaceAll("‘", "'")
     }
 
+    public updateScramble(scramble) {
+        this.scramble = scramble;
+        this.applyMoves(this.previousMoves, true);
+    }
+
     private applyMoves(moves: string, fromInverseButton: boolean) {
         moves = this.removeComments(moves);
         moves = this.fixApostrophe(moves);
