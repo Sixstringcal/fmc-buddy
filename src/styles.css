@@ -346,3 +346,36 @@ button:focus {
   height: 20px;
   fill: white;
 }
+
+.new-scramble-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.new-scramble-button:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.new-scramble-button svg {
+  display: block;
+  margin: auto;
+  fill: #007bff;
+  width: 24px;
+  height: 24px;
+}
+
+.new-scramble-button:hover svg {
+  fill: #0056b3;
+}
