@@ -11,6 +11,7 @@
   transition:
     transform 0.3s ease,
     box-shadow 0.3s ease;
+  z-index: 1; /* Default z-index for cube containers */
 }
 
 .cube-container:hover {
@@ -266,4 +267,27 @@ button:focus {
 .scramble-input::placeholder {
   color: #aaa;
   font-style: italic;
+}
+
+.drag-icon {
+  cursor: grab;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--font-color);
+  background-color: var(--background-color);
+  border: 1px solid var(--primary-color);
+  border-radius: 4px;
+  padding: 5px;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%) rotate(90deg);
+  z-index: 2;
+  user-select: none;
+  pointer-events: auto;
+  text-align: center;
+}
+
+.drag-icon:active {
+  cursor: grabbing;
 }

@@ -35,7 +35,54 @@ export class CubeView {
             cubeContainer = document.createElement("div");
             cubeContainer.id = this.containerId;
             cubeContainer.classList.add("cube-container");
+            cubeContainer.style.position = "absolute";
+            cubeContainer.style.top = "100px";
+            cubeContainer.style.left = "100px";
+            cubeContainer.style.zIndex = "1";
             document.body.appendChild(cubeContainer);
+
+            cubeContainer.addEventListener("mousedown", () => {
+                document.querySelectorAll(".cube-container").forEach((container) => {
+                    (container as HTMLElement).style.zIndex = "1";
+                });
+                cubeContainer.style.zIndex = "10";
+            });
+        }
+
+        const dragIconId = `${this.containerId}-drag-icon`;
+        let dragIcon = document.getElementById(dragIconId);
+        if (!dragIcon) {
+            dragIcon = document.createElement("div");
+            dragIcon.id = dragIconId;
+            dragIcon.classList.add("drag-icon");
+            dragIcon.innerHTML = "&#x2807;";
+            dragIcon.style.transform = "rotate(90deg)";
+            cubeContainer.appendChild(dragIcon);
+
+            let isDragging = false;
+            let offsetX = 0;
+            let offsetY = 0;
+
+            dragIcon.addEventListener("mousedown", (event) => {
+                isDragging = true;
+                offsetX = event.clientX - cubeContainer.getBoundingClientRect().left;
+                offsetY = event.clientY - cubeContainer.getBoundingClientRect().top;
+                document.body.style.cursor = "grabbing";
+            });
+
+            document.addEventListener("mousemove", (event) => {
+                if (isDragging) {
+                    cubeContainer.style.left = `${event.clientX - offsetX}px`;
+                    cubeContainer.style.top = `${event.clientY - offsetY}px`;
+                }
+            });
+
+            document.addEventListener("mouseup", () => {
+                if (isDragging) {
+                    isDragging = false;
+                    document.body.style.cursor = "default";
+                }
+            });
         }
 
         const columnWrapperId = `${this.containerId}-column-wrapper`;
@@ -111,10 +158,9 @@ export class CubeView {
             const input = event.target as HTMLTextAreaElement;
             const cursorPosition = input.selectionStart;
 
-            // Check if the last entered character is "("
             if (input.value[cursorPosition - 1] === "(") {
                 input.value = input.value.slice(0, cursorPosition) + ")" + input.value.slice(cursorPosition);
-                input.selectionStart = input.selectionEnd = cursorPosition; // Move cursor back inside the parentheses
+                input.selectionStart = input.selectionEnd = cursorPosition;
             }
 
             this.applyMoves(input.value.trim(), false);
