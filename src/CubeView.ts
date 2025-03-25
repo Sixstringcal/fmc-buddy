@@ -13,6 +13,7 @@ export class CubeView {
     private previousMoves: string = "";
     private containerId: string;
     private isNormal: boolean = true;
+    private isMinimized: boolean = false;
 
     constructor(scramble: string, containerId: string) {
         this.scramble = scramble;
@@ -43,6 +44,20 @@ export class CubeView {
                 });
                 cubeContainer.style.zIndex = "10";
             });
+        }
+
+        const minimizeButtonId = `${this.containerId}-minimize-button`;
+        let minimizeButton = document.getElementById(minimizeButtonId);
+        if (!minimizeButton) {
+            minimizeButton = document.createElement("button");
+            minimizeButton.id = minimizeButtonId;
+            minimizeButton.classList.add("minimize-button");
+            minimizeButton.innerHTML = "−";
+            minimizeButton.addEventListener("click", (e) => {
+                e.stopPropagation();
+                this.toggleMinimized();
+            });
+            cubeContainer.appendChild(minimizeButton);
         }
 
         const dragIconId = `${this.containerId}-drag-icon`;
@@ -153,6 +168,7 @@ export class CubeView {
         });
 
         this.initializeMoveInput();
+        this.updateMinimizedState();
     }
 
     private toggleMode(button: HTMLButtonElement) {
@@ -160,6 +176,73 @@ export class CubeView {
         button.textContent = this.isNormal ? "Normal" : "Inverse";
         button.style.backgroundColor = this.isNormal ? blue : orange;
         this.applyMoves(this.previousMoves.trim(), true);
+    }
+
+    private toggleMinimized() {
+        this.isMinimized = !this.isMinimized;
+        this.updateMinimizedState();
+    }
+
+    private updateMinimizedState() {
+        const cubeContainer = document.getElementById(this.containerId);
+        const minimizeButton = document.getElementById(`${this.containerId}-minimize-button`);
+        const moveInput = document.getElementById(`${this.containerId}-move-input`) as HTMLTextAreaElement;
+
+        if (!cubeContainer || !minimizeButton) return;
+
+        if (this.isMinimized) {
+            minimizeButton.innerHTML = "+";
+            minimizeButton.classList.add("maximize-button");
+            minimizeButton.classList.remove("minimize-button");
+
+            let textPreview = document.getElementById(`${this.containerId}-text-preview`);
+            if (!textPreview) {
+                textPreview = document.createElement("div");
+                textPreview.id = `${this.containerId}-text-preview`;
+                textPreview.classList.add("text-preview");
+                textPreview.addEventListener("click", () => {
+                    this.toggleMinimized();
+                });
+                cubeContainer.appendChild(textPreview);
+            } else {
+                textPreview.style.display = "block";
+            }
+
+            if (moveInput) {
+                const text = moveInput.value || "";
+                const firstLine = text.split("\n")[0] || "";
+                const preview = firstLine.length > 30 ? firstLine.substring(0, 27) + "..." : firstLine;
+                textPreview.textContent = preview || "(Empty)";
+            } else {
+                textPreview.textContent = "(Empty)";
+            }
+
+            Array.from(cubeContainer.children).forEach(child => {
+                if (child.id !== `${this.containerId}-minimize-button` &&
+                    child.id !== `${this.containerId}-text-preview`) {
+                    (child as HTMLElement).style.display = "none";
+                }
+            });
+
+            cubeContainer.classList.add("cube-container-minimized");
+        } else {
+            minimizeButton.innerHTML = "−";
+            minimizeButton.classList.add("minimize-button");
+            minimizeButton.classList.remove("maximize-button");
+
+            const textPreview = document.getElementById(`${this.containerId}-text-preview`);
+            if (textPreview) {
+                textPreview.style.display = "none";
+            }
+
+            Array.from(cubeContainer.children).forEach(child => {
+                if (child.id !== `${this.containerId}-text-preview`) {
+                    (child as HTMLElement).style.display = "";
+                }
+            });
+
+            cubeContainer.classList.remove("cube-container-minimized");
+        }
     }
 
     private initializeMoveInput() {
@@ -182,6 +265,16 @@ export class CubeView {
             if (input.value[cursorPosition - 1] === "(") {
                 input.value = input.value.slice(0, cursorPosition) + ")" + input.value.slice(cursorPosition);
                 input.selectionStart = input.selectionEnd = cursorPosition;
+            }
+
+            if (this.isMinimized) {
+                const textPreview = document.getElementById(`${this.containerId}-text-preview`);
+                if (textPreview) {
+                    const text = moveInput.value || "";
+                    const firstLine = text.split("\n")[0] || "";
+                    const preview = firstLine.length > 30 ? firstLine.substring(0, 27) + "..." : firstLine;
+                    textPreview.textContent = preview || "(Empty)";
+                }
             }
 
             this.applyMoves(input.value.trim(), false);
