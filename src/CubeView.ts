@@ -1,11 +1,6 @@
 import { TwistyPlayer } from "cubing/twisty";
 
-const validMoves = new Set([
-    "R", "R'", "R2", "L", "L'", "L2", "F", "F'", "F2", "B", "B'", "B2",
-    "U", "U'", "U2", "D", "D'", "D2", "x", "y", "z",
-    "Rw", "Rw2", "Rw'", "Lw", "Lw2", "Lw'", "Uw", "Uw2", "Uw'",
-    "Dw", "Dw'", "Dw2", "Bw", "Bw'", "Bw2", "Fw", "Fw'", "Fw2"
-]);
+const validMoveRegex = /^(R|L|F|B|U|D|x|y|z|Rw|Lw|Fw|Bw|Uw|Dw)(2|'|w2|w')?$/;
 
 const blue = "#007bff";
 const orange = "#ffa500";
@@ -25,7 +20,8 @@ export class CubeView {
         this.twistyPlayer = new TwistyPlayer({
             puzzle: "3x3x3",
             background: "none",
-            controlPanel: "none"
+            controlPanel: "none",
+            cameraLatitudeLimit: 99999999
         });
     }
 
@@ -198,7 +194,7 @@ export class CubeView {
             } else if (isInGroup) {
                 groupBuffer += " " + move;
             } else {
-                if (validMoves.has(move)) {
+                if (validMoveRegex.test(move)) {
                     this.normalMoves += (this.normalMoves ? " " : "") + move;
                 }
             }
@@ -263,7 +259,7 @@ export class CubeView {
                 if (this.inverseMoves) {
                     let invertedMoves = this.invertMoves(this.inverseMoves).split(" ");
                     invertedMoves.forEach((move) => {
-                        if (validMoves.has(move)) {
+                        if (validMoveRegex.test(move)) {
                             this.twistyPlayer.experimentalAddMove(move);
                         }
                     });
@@ -272,7 +268,7 @@ export class CubeView {
                 if (this.scramble) {
                     const scrambleMoves = this.scramble.split(" ");
                     scrambleMoves.forEach((move) => {
-                        if (validMoves.has(move)) {
+                        if (validMoveRegex.test(move)) {
                             this.twistyPlayer.experimentalAddMove(move);
                         }
                     });
@@ -281,7 +277,7 @@ export class CubeView {
                 if (this.normalMoves) {
                     const userMoves = this.normalMoves.split(" ");
                     userMoves.forEach((move) => {
-                        if (validMoves.has(move)) {
+                        if (validMoveRegex.test(move)) {
                             this.twistyPlayer.experimentalAddMove(move);
                         } else {
                             this.showToast(`Invalid move: ${move}`);
@@ -296,7 +292,7 @@ export class CubeView {
                 if (this.normalMoves) {
                     let invertedMoves = this.invertMoves(this.normalMoves).split(" ");
                     invertedMoves.forEach((move) => {
-                        if (validMoves.has(move)) {
+                        if (validMoveRegex.test(move)) {
                             this.twistyPlayer.experimentalAddMove(move);
                         }
                     });
@@ -305,7 +301,7 @@ export class CubeView {
                 if (this.scramble) {
                     const scrambleMoves = this.invertMoves(this.scramble).split(" ");
                     scrambleMoves.forEach((move) => {
-                        if (validMoves.has(move)) {
+                        if (validMoveRegex.test(move)) {
                             this.twistyPlayer.experimentalAddMove(move);
                         }
                     });
@@ -314,7 +310,7 @@ export class CubeView {
                 if (this.inverseMoves) {
                     const userMoves = this.inverseMoves.split(" ");
                     userMoves.forEach((move) => {
-                        if (validMoves.has(move)) {
+                        if (validMoveRegex.test(move)) {
                             this.twistyPlayer.experimentalAddMove(move);
                         } else {
                             this.showToast(`Invalid move: ${move}`);
@@ -329,8 +325,8 @@ export class CubeView {
     private updateMoveCounter() {
         const moveCounter = document.getElementById(`${this.containerId}-move-counter`) as HTMLDivElement;
         if (moveCounter) {
-            const normalMoveCount = this.normalMoves.trim().split(/\s+/).filter((move) => validMoves.has(move)).length;
-            const inverseMoveCount = this.inverseMoves.trim().split(/\s+/).filter((move) => validMoves.has(move)).length;
+            const normalMoveCount = this.normalMoves.trim().split(/\s+/).filter((move) => validMoveRegex.test(move)).length;
+            const inverseMoveCount = this.inverseMoves.trim().split(/\s+/).filter((move) => validMoveRegex.test(move)).length;
             const totalMoves = normalMoveCount + inverseMoveCount;
             moveCounter.textContent = `Moves: ${totalMoves}`;
         }
