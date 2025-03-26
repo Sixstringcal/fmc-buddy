@@ -81,6 +81,9 @@ export class CubeView {
                 if (isDragging) {
                     cubeContainer.style.left = `${event.clientX - offsetX}px`;
                     cubeContainer.style.top = `${event.clientY - offsetY}px`;
+                    
+                    // Update any connection lines while dragging
+                    this.updateConnectionLines();
                 }
             });
 
@@ -88,6 +91,9 @@ export class CubeView {
                 if (isDragging) {
                     isDragging = false;
                     document.body.classList.remove("grabbing");
+                    
+                    // Final update for connection lines
+                    this.updateConnectionLines();
                 }
             });
 
@@ -104,12 +110,19 @@ export class CubeView {
                     const touch = event.touches[0];
                     cubeContainer.style.left = `${touch.clientX - offsetX}px`;
                     cubeContainer.style.top = `${touch.clientY - offsetY}px`;
+                    
+                    // Update any connection lines while dragging
+                    this.updateConnectionLines();
+                    
                     event.preventDefault();
                 }
             });
 
             document.addEventListener("touchend", () => {
                 isDragging = false;
+                
+                // Final update for connection lines
+                this.updateConnectionLines();
             });
 
             document.addEventListener("touchcancel", () => {
@@ -200,13 +213,50 @@ export class CubeView {
             rotationButtonContainer.appendChild(rotationZPrimeButton);
         }
 
+        // Create a wrapper for input and duplicate button to place them side by side
+        const inputWrapperID = `${this.containerId}-input-wrapper`;
+        let inputWrapper = document.getElementById(inputWrapperID);
+        if (!inputWrapper) {
+            inputWrapper = document.createElement("div");
+            inputWrapper.id = inputWrapperID;
+            inputWrapper.style.display = "flex";
+            inputWrapper.style.flexDirection = "row";
+            inputWrapper.style.alignItems = "flex-start";
+            inputWrapper.style.width = "100%";
+            columnWrapper.appendChild(inputWrapper);
+        }
+
         const moveInputId = `${this.containerId}-move-input`;
         let moveInput = document.getElementById(moveInputId) as HTMLTextAreaElement;
         if (!moveInput) {
             moveInput = document.createElement("textarea");
             moveInput.id = moveInputId;
             moveInput.classList.add("move-input");
-            columnWrapper.appendChild(moveInput);
+            moveInput.style.flexGrow = "1";
+            inputWrapper.appendChild(moveInput);
+        }
+
+        // Add duplicate button next to move input
+        const duplicateButtonId = `${this.containerId}-duplicate-button`;
+        let duplicateButton = document.getElementById(duplicateButtonId);
+        if (!duplicateButton) {
+            duplicateButton = document.createElement("button");
+            duplicateButton.id = duplicateButtonId;
+            duplicateButton.textContent = "+";
+            duplicateButton.classList.add("duplicate-button");
+            duplicateButton.style.marginLeft = "10px";
+            duplicateButton.style.fontSize = "16px";
+            duplicateButton.style.padding = "2px 8px";
+            duplicateButton.style.borderRadius = "4px";
+            duplicateButton.style.background = "#4CAF50";
+            duplicateButton.style.color = "white";
+            duplicateButton.style.border = "none";
+            duplicateButton.style.cursor = "pointer";
+            duplicateButton.style.alignSelf = "flex-start";
+            duplicateButton.title = "Duplicate this cube view";
+            
+            duplicateButton.addEventListener("click", () => this.duplicateCubeView());
+            inputWrapper.appendChild(duplicateButton);
         }
 
         cubeContainer.insertBefore(this.twistyPlayer, columnWrapper);
@@ -352,6 +402,13 @@ export class CubeView {
                 const cursorPosition = input.selectionStart;
                 const movesUpToCursor = input.value.substring(0, cursorPosition).trim();
                 this.applyMoves(movesUpToCursor, false);
+            }
+        });
+
+        moveInput.addEventListener('addTargetLine', (event: CustomEvent) => {
+            const line = event.detail.line;
+            if (line) {
+                this.addTargetLine(line);
             }
         });
     }
@@ -591,5 +648,190 @@ export class CubeView {
         }
 
         this.applyMoves(this.previousMoves, true);
+    }
+
+    // Add a method to duplicate the cube view
+    private duplicateCubeView() {
+        const moveInput = document.getElementById(`${this.containerId}-move-input`) as HTMLTextAreaElement;
+        if (!moveInput) return;
+        
+        // Get the current content and cursor position
+        const currentContent = moveInput.value;
+        const cursorPosition = moveInput.selectionStart;
+        
+        // Create a unique ID for the new cube view
+        const newContainerId = `cube-container-${Date.now()}`;
+        
+        // Create the new cube view with the same scramble
+        const newCubeView = new CubeView(this.scramble, newContainerId);
+        newCubeView.initialize();
+        
+        // Get the container elements for positioning
+        const originalContainer = document.getElementById(this.containerId);
+        const newContainer = document.getElementById(newContainerId);
+        
+        if (originalContainer && newContainer) {
+            // Copy the content to the new cube view
+            const newMoveInput = document.getElementById(`${newContainerId}-move-input`) as HTMLTextAreaElement;
+            if (newMoveInput) {
+                newMoveInput.value = currentContent;
+                // Apply the same moves up to cursor
+                this.applyMovesToNewCubeView(newCubeView, currentContent.substring(0, cursorPosition).trim());
+            }
+            
+            // Position the new cube view to the right of the original
+            const originalRect = originalContainer.getBoundingClientRect();
+            newContainer.style.position = "absolute";
+            newContainer.style.top = `${originalRect.top}px`;
+            newContainer.style.left = `${originalRect.right + 50}px`; // 50px gap for the connection line
+            
+            // Create a visual connection between the cube views
+            this.createConnectionLine(originalContainer, newContainer);
+        }
+    }
+    
+    // Apply moves to a new cube view
+    private applyMovesToNewCubeView(cubeView: CubeView, moves: string) {
+        const moveInput = document.getElementById(`${cubeView.getContainerId()}-move-input`) as HTMLTextAreaElement;
+        if (moveInput) {
+            moveInput.value = this.previousMoves;
+            const cursorPosition = Math.min(moves.length, this.previousMoves.length);
+            moveInput.selectionStart = moveInput.selectionEnd = cursorPosition;
+            
+            // Trigger the input event to update the cube
+            const inputEvent = new Event('input', { bubbles: true });
+            moveInput.dispatchEvent(inputEvent);
+            
+            // Also trigger click to update cursor position
+            const clickEvent = new MouseEvent('click', { bubbles: true });
+            moveInput.dispatchEvent(clickEvent);
+        }
+    }
+    
+    // Create a visual connection line between two cube containers
+    private createConnectionLine(fromContainer: HTMLElement, toContainer: HTMLElement) {
+        // Create line element
+        const connectionLine = document.createElement("div");
+        connectionLine.classList.add("connection-line");
+        connectionLine.id = `connection-${fromContainer.id}-${toContainer.id}`;
+        
+        // Store container IDs as data attributes for later updates
+        connectionLine.setAttribute('data-source', fromContainer.id);
+        connectionLine.setAttribute('data-target', toContainer.id);
+        
+        document.body.appendChild(connectionLine);
+        
+        // Style the line
+        connectionLine.style.position = "absolute";
+        connectionLine.style.height = "2px";
+        connectionLine.style.backgroundColor = "#4CAF50";
+        connectionLine.style.zIndex = "1";
+        
+        // Add a subtle transition for smooth updates when dragging
+        connectionLine.style.transition = "all 0.05s ease-out";
+        
+        // Store this line for this cube view (source)
+        this.sourceLines.push(connectionLine);
+        
+        // Find the target cube view and store the line there too
+        const targetCubeViewElements = document.querySelectorAll('.cube-container');
+        for (let i = 0; i < targetCubeViewElements.length; i++) {
+            const element = targetCubeViewElements[i] as HTMLElement;
+            if (element.id === toContainer.id) {
+                // Found the target container, now find its CubeView instance
+                const targetId = element.id;
+                setTimeout(() => {
+                    // Use a short timeout to ensure the CubeView instance is fully initialized
+                    const moveInput = document.getElementById(`${targetId}-move-input`);
+                    if (moveInput) {
+                        // If we can find the move input, the CubeView is properly initialized
+                        // Use a custom event to add the line to the target CubeView
+                        const event = new CustomEvent('addTargetLine', { 
+                            detail: { line: connectionLine }
+                        });
+                        moveInput.dispatchEvent(event);
+                    }
+                }, 100);
+                break;
+            }
+        }
+        
+        // Initial positioning
+        this.updateConnectionLinePosition(connectionLine, fromContainer, toContainer);
+        
+        // Update position when window is resized
+        window.addEventListener("resize", () => {
+            this.updateConnectionLinePosition(connectionLine, fromContainer, toContainer);
+        });
+    }
+    
+    // Method to add a line where this cube is the target
+    public addTargetLine(line: HTMLElement) {
+        this.targetLines.push(line);
+    }
+
+    // Add property to track connection lines
+    private sourceLines: HTMLElement[] = []; // Lines where this cube is the source
+    private targetLines: HTMLElement[] = []; // Lines where this cube is the target
+    
+    // Method to update all connection lines related to this cube view
+    private updateConnectionLines() {
+        // Update all source lines
+        this.sourceLines.forEach(line => {
+            const sourceId = this.containerId;
+            const targetId = line.getAttribute('data-target');
+            if (targetId) {
+                const sourceContainer = document.getElementById(sourceId);
+                const targetContainer = document.getElementById(targetId);
+                if (sourceContainer && targetContainer) {
+                    this.updateConnectionLinePosition(line, sourceContainer, targetContainer);
+                }
+            }
+        });
+        
+        // Update all target lines
+        this.targetLines.forEach(line => {
+            const sourceId = line.getAttribute('data-source');
+            const targetId = this.containerId;
+            if (sourceId) {
+                const sourceContainer = document.getElementById(sourceId);
+                const targetContainer = document.getElementById(targetId);
+                if (sourceContainer && targetContainer) {
+                    this.updateConnectionLinePosition(line, sourceContainer, targetContainer);
+                }
+            }
+        });
+    }
+    
+    // Method to update a single connection line position
+    private updateConnectionLinePosition(line: HTMLElement, fromContainer: HTMLElement, toContainer: HTMLElement) {
+        const fromRect = fromContainer.getBoundingClientRect();
+        const toRect = toContainer.getBoundingClientRect();
+            
+        // Position at the middle height of containers
+        const fromY = fromRect.top + fromRect.height / 2;
+        const toY = toRect.top + toRect.height / 2;
+            
+        // Connect from right side of original to left side of new
+        const fromX = fromRect.right;
+        const toX = toRect.left;
+        
+        // Calculate the angle and length for the diagonal line
+        const dx = toX - fromX;
+        const dy = toY - fromY;
+        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+        const length = Math.sqrt(dx * dx + dy * dy);
+            
+        // Position and size the line
+        line.style.width = `${length}px`;
+        line.style.left = `${fromX}px`;
+        line.style.top = `${fromY}px`;
+        line.style.transformOrigin = '0 0'; // Set transform origin to the left side
+        line.style.transform = `rotate(${angle}deg)`; // Rotate the line to correct angle
+    }
+
+    // Make sure CubeView can be accessed from other CubeViews
+    public getContainerId(): string {
+        return this.containerId;
     }
 }
