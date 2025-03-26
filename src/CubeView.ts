@@ -419,7 +419,10 @@ export class CubeView {
                 this.twistyPlayer.experimentalAddMove(this.secretRotation);
             }
 
-            this.updateMoveCounter();
+            const moveCounter = document.getElementById(`${this.containerId}-move-counter`) as HTMLDivElement;
+            if (moveCounter) {
+                moveCounter.textContent = "Moves: 0";
+            }
             return;
         }
         if (fromInverseButton || moves !== this.previousMoves) {
