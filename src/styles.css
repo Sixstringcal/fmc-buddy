@@ -396,8 +396,12 @@ button:focus {
   padding: 2px 5px;
 }
 
+.minimize-button {
+  background: transparent;
+}
+
 .maximize-button {
-  background: rgba(0, 0, 0, 0.2);
+  background: transparent;
 }
 
 .text-preview {
