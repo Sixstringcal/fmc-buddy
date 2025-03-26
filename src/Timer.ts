@@ -32,6 +32,12 @@ export class Timer {
         document.body.appendChild(this.timerContainer);
 
         this.initialize();
+
+        this.positionTimerBelowScramble();
+
+        window.addEventListener('resize', () => {
+            this.positionTimerBelowScramble();
+        });
     }
 
     private async initialize() {
@@ -117,5 +123,28 @@ export class Timer {
         this.loadSvg("/assets/play.svg").then((svg) => {
             this.timerButton.innerHTML = svg;
         });
+    }
+
+    private positionTimerBelowScramble() {
+        const scrambleContainer = document.getElementById('scramble-container');
+
+        if (scrambleContainer) {
+            const scrambleRect = scrambleContainer.getBoundingClientRect();
+            const timerRect = this.timerContainer.getBoundingClientRect();
+
+            const overlapping = !(
+                timerRect.top > scrambleRect.bottom ||
+                timerRect.right < scrambleRect.left ||
+                timerRect.bottom < scrambleRect.top ||
+                timerRect.left > scrambleRect.right
+            );
+
+            if (overlapping) {
+                const marginTop = scrambleRect.height + 10;
+                this.timerContainer.style.marginTop = `${marginTop}px`;
+            } else {
+                this.timerContainer.style.marginTop = '0px';
+            }
+        }
     }
 }
