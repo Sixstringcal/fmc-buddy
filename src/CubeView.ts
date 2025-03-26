@@ -307,19 +307,28 @@ export class CubeView {
             }
         }
 
+        let previousValue = moveInput.value;
+
         moveInput.addEventListener("input", (event) => {
             const input = event.target as HTMLTextAreaElement;
             const cursorPosition = input.selectionStart;
+            const currentValue = input.value;
 
-            if (input.value[cursorPosition - 1] === "(") {
-                input.value = input.value.slice(0, cursorPosition) + ")" + input.value.slice(cursorPosition);
+            if (cursorPosition > 0 &&
+                currentValue.length > previousValue.length &&
+                currentValue[cursorPosition - 1] === "(") {
+
+                input.value = currentValue.slice(0, cursorPosition) + ")" + currentValue.slice(cursorPosition);
+
                 input.selectionStart = input.selectionEnd = cursorPosition;
             }
+
+            previousValue = input.value;
 
             if (this.isMinimized) {
                 const textPreview = document.getElementById(`${this.containerId}-text-preview`);
                 if (textPreview) {
-                    const text = moveInput.value || "";
+                    const text = input.value || "";
                     const firstLine = text.split("\n")[0] || "";
                     const preview = firstLine.length > 30 ? firstLine.substring(0, 27) + "..." : firstLine;
                     textPreview.textContent = preview || "(Empty)";
