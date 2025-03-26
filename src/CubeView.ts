@@ -2,8 +2,8 @@ import { TwistyPlayer } from "cubing/twisty";
 
 const validMoveRegex = /^(R|L|F|B|U|D|x|y|z|Rw|Lw|Fw|Bw|Uw|Dw)(2|'|w2|w')?$/;
 
-const blue = "#007bff";
-const orange = "#ffa500";
+const BLUE = "#007bff";
+const ORANGE = "#ffa500";
 
 export class CubeView {
     private scramble: string;
@@ -14,6 +14,7 @@ export class CubeView {
     private containerId: string;
     private isNormal: boolean = true;
     private isMinimized: boolean = false;
+    private secretRotation: string = "";
 
     constructor(scramble: string, containerId: string) {
         this.scramble = scramble;
@@ -32,10 +33,6 @@ export class CubeView {
             cubeContainer = document.createElement("div");
             cubeContainer.id = this.containerId;
             cubeContainer.classList.add("cube-container");
-            cubeContainer.style.position = "absolute";
-            cubeContainer.style.top = "100px";
-            cubeContainer.style.left = "100px";
-            cubeContainer.style.zIndex = "1";
             document.body.appendChild(cubeContainer);
 
             cubeContainer.addEventListener("mousedown", () => {
@@ -67,7 +64,6 @@ export class CubeView {
             dragIcon.id = dragIconId;
             dragIcon.classList.add("drag-icon");
             dragIcon.innerHTML = "&#x2807;";
-            dragIcon.style.transform = "rotate(90deg)";
             cubeContainer.appendChild(dragIcon);
 
             let isDragging = false;
@@ -78,7 +74,7 @@ export class CubeView {
                 isDragging = true;
                 offsetX = event.clientX - cubeContainer.getBoundingClientRect().left;
                 offsetY = event.clientY - cubeContainer.getBoundingClientRect().top;
-                document.body.style.cursor = "grabbing";
+                document.body.classList.add("grabbing");
             });
 
             document.addEventListener("mousemove", (event) => {
@@ -91,7 +87,7 @@ export class CubeView {
             document.addEventListener("mouseup", () => {
                 if (isDragging) {
                     isDragging = false;
-                    document.body.style.cursor = "default";
+                    document.body.classList.remove("grabbing");
                 }
             });
 
@@ -151,6 +147,59 @@ export class CubeView {
             columnWrapper.appendChild(toggleButton);
         }
 
+        const rotationButtonContainerId = `${this.containerId}-rotation-buttons`;
+        let rotationButtonContainer = document.getElementById(rotationButtonContainerId);
+        if (!rotationButtonContainer) {
+            rotationButtonContainer = document.createElement("div");
+            rotationButtonContainer.id = rotationButtonContainerId;
+            rotationButtonContainer.classList.add("rotation-button-container");
+            columnWrapper.appendChild(rotationButtonContainer);
+        }
+
+        const rotationXButtonId = `${this.containerId}-rotation-x-button`;
+        let rotationXButton = document.getElementById(rotationXButtonId) as HTMLButtonElement;
+        if (!rotationXButton) {
+            rotationXButton = document.createElement("button");
+            rotationXButton.id = rotationXButtonId;
+            rotationXButton.textContent = "x";
+            rotationXButton.classList.add("rotation-button", "button");
+            rotationXButton.addEventListener("click", () => this.toggleSecretRotation("x"));
+            rotationButtonContainer.appendChild(rotationXButton);
+        }
+
+        const rotationXPrimeButtonId = `${this.containerId}-rotation-xprime-button`;
+        let rotationXPrimeButton = document.getElementById(rotationXPrimeButtonId) as HTMLButtonElement;
+        if (!rotationXPrimeButton) {
+            rotationXPrimeButton = document.createElement("button");
+            rotationXPrimeButton.id = rotationXPrimeButtonId;
+            rotationXPrimeButton.textContent = "x'";
+            rotationXPrimeButton.classList.add("rotation-button", "button");
+            rotationXPrimeButton.addEventListener("click", () => this.toggleSecretRotation("x'"));
+            rotationButtonContainer.appendChild(rotationXPrimeButton);
+        }
+
+        const rotationZButtonId = `${this.containerId}-rotation-z-button`;
+        let rotationZButton = document.getElementById(rotationZButtonId) as HTMLButtonElement;
+        if (!rotationZButton) {
+            rotationZButton = document.createElement("button");
+            rotationZButton.id = rotationZButtonId;
+            rotationZButton.textContent = "z";
+            rotationZButton.classList.add("rotation-button", "button");
+            rotationZButton.addEventListener("click", () => this.toggleSecretRotation("z"));
+            rotationButtonContainer.appendChild(rotationZButton);
+        }
+
+        const rotationZPrimeButtonId = `${this.containerId}-rotation-zprime-button`;
+        let rotationZPrimeButton = document.getElementById(rotationZPrimeButtonId) as HTMLButtonElement;
+        if (!rotationZPrimeButton) {
+            rotationZPrimeButton = document.createElement("button");
+            rotationZPrimeButton.id = rotationZPrimeButtonId;
+            rotationZPrimeButton.textContent = "z'";
+            rotationZPrimeButton.classList.add("rotation-button", "button");
+            rotationZPrimeButton.addEventListener("click", () => this.toggleSecretRotation("z'"));
+            rotationButtonContainer.appendChild(rotationZPrimeButton);
+        }
+
         const moveInputId = `${this.containerId}-move-input`;
         let moveInput = document.getElementById(moveInputId) as HTMLTextAreaElement;
         if (!moveInput) {
@@ -174,7 +223,7 @@ export class CubeView {
     private toggleMode(button: HTMLButtonElement) {
         this.isNormal = !this.isNormal;
         button.textContent = this.isNormal ? "Normal" : "Inverse";
-        button.style.backgroundColor = this.isNormal ? blue : orange;
+        button.style.backgroundColor = this.isNormal ? BLUE : ORANGE;
         this.applyMoves(this.previousMoves.trim(), true);
     }
 
@@ -365,6 +414,11 @@ export class CubeView {
             else {
                 this.twistyPlayer.alg = this.invertMoves(this.scramble)
             }
+
+            if (this.secretRotation) {
+                this.twistyPlayer.experimentalAddMove(this.secretRotation);
+            }
+
             this.updateMoveCounter();
             return;
         }
@@ -402,6 +456,10 @@ export class CubeView {
                         }
                     });
                 }
+
+                if (this.secretRotation) {
+                    this.twistyPlayer.experimentalAddMove(this.secretRotation);
+                }
             } else {
                 this.previousMoves = moves;
                 this.twistyPlayer.alg = "";
@@ -435,6 +493,10 @@ export class CubeView {
                         }
                     });
                 }
+
+                if (this.secretRotation) {
+                    this.twistyPlayer.experimentalAddMove(this.secretRotation);
+                }
             }
             this.updateMoveCounter();
         }
@@ -467,5 +529,38 @@ export class CubeView {
         setTimeout(() => {
             toast.classList.remove("show");
         }, 3000);
+    }
+
+    private toggleSecretRotation(rotation: string) {
+        if (this.secretRotation === rotation) {
+            this.secretRotation = "";
+        } else {
+            this.secretRotation = rotation;
+        }
+
+        const rotationXButton = document.getElementById(`${this.containerId}-rotation-x-button`);
+        const rotationXPrimeButton = document.getElementById(`${this.containerId}-rotation-xprime-button`);
+        const rotationZButton = document.getElementById(`${this.containerId}-rotation-z-button`);
+        const rotationZPrimeButton = document.getElementById(`${this.containerId}-rotation-zprime-button`);
+
+        [rotationXButton, rotationXPrimeButton, rotationZButton, rotationZPrimeButton].forEach(button => {
+            if (button) { button.style.backgroundColor = ""; button.style.color = BLUE; }
+        });
+
+        if (this.secretRotation) {
+            const activeButton = {
+                "x": rotationXButton,
+                "x'": rotationXPrimeButton,
+                "z": rotationZButton,
+                "z'": rotationZPrimeButton
+            }[this.secretRotation];
+
+            if (activeButton) {
+                activeButton.style.backgroundColor = BLUE;
+                activeButton.style.color = "white";
+            }
+        }
+
+        this.applyMoves(this.previousMoves, true);
     }
 }

@@ -12,6 +12,9 @@
     transform 0.3s ease,
     box-shadow 0.3s ease;
   z-index: 1;
+  position: absolute;
+  top: 100px;
+  left: 100px;
 }
 
 .cube-container:hover {
@@ -415,4 +418,56 @@ button:focus {
   border: 1px solid #ccc;
   border-radius: 5px;
   padding: 5px;
+}
+
+.grabbing {
+  cursor: grabbing;
+}
+
+.toggle-button {
+}
+
+.rotation-button-container {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  justify-content: center;
+}
+
+.rotation-button {
+  font-size: 0.9em;
+  flex: 1;
+  padding: 6px 10px;
+  text-align: center;
+  border: 2px solid #007bff;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  color: #007bff;
+  cursor: pointer;
+  transition:
+    background-color 0.3s ease,
+    transform 0.2s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.rotation-button:hover {
+  background-color: #e3f2fd;
+  transform: scale(1.1);
+  color: #0056b3;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.rotation-button.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #0056b3;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.rotation-button.active:hover {
+  background-color: #0056b3;
+  color: white;
+  text-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
+  transform: scale(1.1);
 }
