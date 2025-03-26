@@ -326,7 +326,24 @@ export class CubeView {
                 }
             }
 
-            this.applyMoves(input.value.trim(), false);
+            const movesUpToCursor = input.value.substring(0, cursorPosition).trim();
+            this.applyMoves(movesUpToCursor, false);
+        });
+
+        moveInput.addEventListener("click", (event) => {
+            const input = event.target as HTMLTextAreaElement;
+            const cursorPosition = input.selectionStart;
+            const movesUpToCursor = input.value.substring(0, cursorPosition).trim();
+            this.applyMoves(movesUpToCursor, false);
+        });
+
+        moveInput.addEventListener("keyup", (event) => {
+            if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) {
+                const input = event.target as HTMLTextAreaElement;
+                const cursorPosition = input.selectionStart;
+                const movesUpToCursor = input.value.substring(0, cursorPosition).trim();
+                this.applyMoves(movesUpToCursor, false);
+            }
         });
     }
 
