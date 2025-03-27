@@ -2,11 +2,12 @@ import { randomScrambleForEvent } from "cubing/scramble";
 import { CubeView } from "./CubeView";
 import { Timer } from "./Timer";
 import { ScrambleView } from "./ScrambleView";
-import { loadState, saveState } from "./stateManager";
+import { loadState, saveState, clearLocalStorage } from "./stateManager";
 
 let scramble: string = "";
 let cubeViewCount = 0;
 const cubeViews: CubeView[] = [];
+let scrambleView: ScrambleView;
 
 (async () => {
     const documentContainer = document.createElement('div');
@@ -14,8 +15,10 @@ const cubeViews: CubeView[] = [];
     documentContainer.className = 'document-container';
     document.body.appendChild(documentContainer);
 
-    const scrambleView = new ScrambleView("");
+    scrambleView = new ScrambleView("");
     scrambleView.initialize();
+    
+    scrambleView.onRefreshScramble(refreshScramble);
 
     scramble = loadState("scramble", "");
     if (scramble.trim() === "") {
@@ -58,6 +61,27 @@ const cubeViews: CubeView[] = [];
         saveState("scramble", scramble);
     }, 5000);
 })();
+
+async function refreshScramble() {
+    clearLocalStorage();
+    
+    scramble = (await randomScrambleForEvent("333fm")).toString();
+    saveState("scramble", scramble);
+    
+    scrambleView.updateScramble(scramble);
+    
+    cubeViews.forEach(view => {
+        const container = document.getElementById(view.getContainerId());
+        if (container) {
+            container.remove();
+        }
+    });
+    
+    cubeViews.length = 0;
+    cubeViewCount = 0;
+    
+    createNewCubeView();
+}
 
 async function loadSavedCubeViews(scrambleView: ScrambleView) {
     const savedCount = loadState<number>("cubeViewCount", 0);

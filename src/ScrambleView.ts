@@ -10,6 +10,7 @@ export class ScrambleView {
     private showingInverse: boolean = false;
     private cubeViews: CubeView[] = [];
     private inverseButton: HTMLButtonElement;
+    private refreshScrambleCallback: (() => Promise<void>) | null = null;
 
     constructor(scramble: string) {
         this.scramble = scramble;
@@ -127,8 +128,12 @@ export class ScrambleView {
         });
 
         newScrambleButton.addEventListener("click", async () => {
-            const newScramble = (await randomScrambleForEvent("333fm")).toString();
-            this.updateScramble(newScramble);
+            if (this.refreshScrambleCallback) {
+                await this.refreshScrambleCallback();
+            } else {
+                const newScramble = (await randomScrambleForEvent("333fm")).toString();
+                this.updateScramble(newScramble);
+            }
         });
 
         this.scrambleContainer.appendChild(newScrambleButton);
@@ -165,5 +170,9 @@ export class ScrambleView {
         if (!this.cubeViews.includes(cubeView)) {
             this.cubeViews.push(cubeView);
         }
+    }
+
+    onRefreshScramble(callback: () => Promise<void>) {
+        this.refreshScrambleCallback = callback;
     }
 }
