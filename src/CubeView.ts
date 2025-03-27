@@ -358,7 +358,8 @@ export class CubeView {
 
             Array.from(cubeContainer.children).forEach(child => {
                 if (child.id !== `${this.containerId}-minimize-button` &&
-                    child.id !== `${this.containerId}-text-preview`) {
+                    child.id !== `${this.containerId}-text-preview` &&
+                    child.id !== `${this.containerId}-drag-icon`) {
                     (child as HTMLElement).style.display = "none";
                 }
             });
@@ -486,7 +487,6 @@ export class CubeView {
     }
 
     private removeContainerDragHandlers(container: HTMLElement) {
-
         container.style.cursor = "";
     }
 
