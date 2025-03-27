@@ -370,13 +370,13 @@ export class CubeView {
 
                 input.selectionStart = input.selectionEnd = cursorPosition;
             }
-            
+
             if (cursorPosition > 0 &&
                 currentValue.length > previousValue.length &&
-                currentValue[cursorPosition - 1] === ")" && 
-                cursorPosition < currentValue.length && 
+                currentValue[cursorPosition - 1] === ")" &&
+                cursorPosition < currentValue.length &&
                 currentValue[cursorPosition] === ")") {
-                
+
                 input.value = currentValue.slice(0, cursorPosition) + currentValue.slice(cursorPosition + 1);
                 input.selectionStart = input.selectionEnd = cursorPosition;
             }
@@ -663,10 +663,19 @@ export class CubeView {
         if (!moveInput) return;
 
         const currentContent = moveInput.value;
-        const cursorPosition = moveInput.selectionStart;
+        const selectionStart = moveInput.selectionStart;
+        const selectionEnd = moveInput.selectionEnd;
+        const hasSelection = selectionStart !== selectionEnd;
+
+        let contentToCopy = currentContent;
+        let cursorPosition = selectionStart;
+
+        if (hasSelection) {
+            contentToCopy = currentContent.substring(selectionStart, selectionEnd);
+            cursorPosition = 0;
+        }
 
         const newContainerId = `cube-container-${Date.now()}`;
-
         const newCubeView = new CubeView(this.scramble, newContainerId);
         newCubeView.initialize();
 
@@ -676,8 +685,8 @@ export class CubeView {
         if (originalContainer && newContainer) {
             const newMoveInput = document.getElementById(`${newContainerId}-move-input`) as HTMLTextAreaElement;
             if (newMoveInput) {
-                newMoveInput.value = currentContent;
-                this.applyMovesToNewCubeView(newCubeView, currentContent.substring(0, cursorPosition).trim());
+                newMoveInput.value = contentToCopy;
+                this.applyMovesToNewCubeView(newCubeView, contentToCopy, cursorPosition);
             }
 
             const originalRect = originalContainer.getBoundingClientRect();
@@ -689,11 +698,9 @@ export class CubeView {
         }
     }
 
-    private applyMovesToNewCubeView(cubeView: CubeView, moves: string) {
+    private applyMovesToNewCubeView(cubeView: CubeView, content: string, cursorPosition: number) {
         const moveInput = document.getElementById(`${cubeView.getContainerId()}-move-input`) as HTMLTextAreaElement;
         if (moveInput) {
-            moveInput.value = this.previousMoves;
-            const cursorPosition = Math.min(moves.length, this.previousMoves.length);
             moveInput.selectionStart = moveInput.selectionEnd = cursorPosition;
 
             const inputEvent = new Event('input', { bubbles: true });
@@ -740,28 +747,6 @@ export class CubeView {
         this.targetConnections.forEach(connection => {
             connection.updatePosition();
         });
-    }
-
-    private updateConnectionLinePosition(line: HTMLElement, fromContainer: HTMLElement, toContainer: HTMLElement) {
-        const fromRect = fromContainer.getBoundingClientRect();
-        const toRect = toContainer.getBoundingClientRect();
-
-        const fromY = fromRect.top + fromRect.height / 2;
-        const toY = toRect.top + toRect.height / 2;
-
-        const fromX = fromRect.right;
-        const toX = toRect.left;
-
-        const dx = toX - fromX;
-        const dy = toY - fromY;
-        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-        const length = Math.sqrt(dx * dx + dy * dy);
-
-        line.style.width = `${length}px`;
-        line.style.left = `${fromX}px`;
-        line.style.top = `${fromY}px`;
-        line.style.transformOrigin = '0 0';
-        line.style.transform = `rotate(${angle}deg)`;
     }
 
     public getContainerId(): string {
