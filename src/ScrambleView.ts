@@ -98,7 +98,7 @@ export class ScrambleView {
 
     private toggleInverseScramble() {
         this.showingInverse = !this.showingInverse;
-        
+
         if (this.showingInverse) {
             if (this.cubeViews.length > 0) {
                 const inverseScramble = this.cubeViews[0].invertMoves(this.scramble);
@@ -128,6 +128,8 @@ export class ScrambleView {
         });
 
         newScrambleButton.addEventListener("click", async () => {
+            this.resetAllCubeViews();
+
             if (this.refreshScrambleCallback) {
                 await this.refreshScrambleCallback();
             } else {
@@ -137,6 +139,25 @@ export class ScrambleView {
         });
 
         this.scrambleContainer.appendChild(newScrambleButton);
+    }
+
+    private resetAllCubeViews() {
+        this.cubeViews.forEach(cubeView => {
+            const container = document.getElementById(cubeView.getContainerId());
+            if (container) {
+                container.remove();
+            }
+        });
+
+        const allCubeContainers = document.querySelectorAll('.cube-container');
+        allCubeContainers.forEach(container => {
+            container.remove();
+        });
+
+        this.cubeViews = [];
+
+        const links = document.querySelectorAll('.connection-line');
+        links.forEach(link => link.remove());
     }
 
     updateScramble(newScramble: string) {

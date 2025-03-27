@@ -70,13 +70,6 @@ async function refreshScramble() {
     
     scrambleView.updateScramble(scramble);
     
-    cubeViews.forEach(view => {
-        const container = document.getElementById(view.getContainerId());
-        if (container) {
-            container.remove();
-        }
-    });
-    
     cubeViews.length = 0;
     cubeViewCount = 0;
     
