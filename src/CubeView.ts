@@ -370,6 +370,16 @@ export class CubeView {
 
                 input.selectionStart = input.selectionEnd = cursorPosition;
             }
+            
+            if (cursorPosition > 0 &&
+                currentValue.length > previousValue.length &&
+                currentValue[cursorPosition - 1] === ")" && 
+                cursorPosition < currentValue.length && 
+                currentValue[cursorPosition] === ")") {
+                
+                input.value = currentValue.slice(0, cursorPosition) + currentValue.slice(cursorPosition + 1);
+                input.selectionStart = input.selectionEnd = cursorPosition;
+            }
 
             previousValue = input.value;
 
