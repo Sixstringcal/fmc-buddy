@@ -33,7 +33,7 @@
   border-radius: 10px;
   outline: none;
   background: #fff;
-  resize: vertical;
+  resize: both;
   transition:
     border-color 0.3s ease,
     box-shadow 0.3s ease,
