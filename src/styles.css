@@ -430,13 +430,15 @@ body {
   border: 1px solid #ccc;
   border-radius: 5px;
   padding: 5px;
+  cursor: grab;
+}
+
+.cube-container-minimized:active {
+  cursor: grabbing;
 }
 
 .grabbing {
   cursor: grabbing;
-}
-
-.toggle-button {
 }
 
 .rotation-button-container {

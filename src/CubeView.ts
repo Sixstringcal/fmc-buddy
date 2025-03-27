@@ -321,6 +321,7 @@ export class CubeView {
         const cubeContainer = document.getElementById(this.containerId);
         const minimizeButton = document.getElementById(`${this.containerId}-minimize-button`);
         const moveInput = document.getElementById(`${this.containerId}-move-input`) as HTMLTextAreaElement;
+        const dragIcon = document.getElementById(`${this.containerId}-drag-icon`);
 
         if (!cubeContainer || !minimizeButton) return;
 
@@ -328,6 +329,10 @@ export class CubeView {
             minimizeButton.innerHTML = "+";
             minimizeButton.classList.add("maximize-button");
             minimizeButton.classList.remove("minimize-button");
+
+            if (dragIcon) {
+                dragIcon.style.display = "none";
+            }
 
             let textPreview = document.getElementById(`${this.containerId}-text-preview`);
             if (!textPreview) {
@@ -359,10 +364,16 @@ export class CubeView {
             });
 
             cubeContainer.classList.add("cube-container-minimized");
+
+            this.makeContainerDraggable(cubeContainer);
         } else {
             minimizeButton.innerHTML = "−";
             minimizeButton.classList.add("minimize-button");
             minimizeButton.classList.remove("maximize-button");
+
+            if (dragIcon) {
+                dragIcon.style.display = "";
+            }
 
             const textPreview = document.getElementById(`${this.containerId}-text-preview`);
             if (textPreview) {
@@ -376,7 +387,107 @@ export class CubeView {
             });
 
             cubeContainer.classList.remove("cube-container-minimized");
+
+            this.removeContainerDragHandlers(cubeContainer);
         }
+    }
+
+    private makeContainerDraggable(container: HTMLElement) {
+        const mouseDownHandler = (event: MouseEvent) => {
+            if ((event.target as HTMLElement).id !== `${this.containerId}-minimize-button`) {
+                container.classList.add("grabbing");
+                container.style.zIndex = "100";
+
+                const rect = container.getBoundingClientRect();
+                const offsetX = event.clientX - rect.left;
+                const offsetY = event.clientY - rect.top;
+
+                const mouseMoveHandler = (moveEvent: MouseEvent) => {
+                    const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+                    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+
+                    const newLeft = moveEvent.clientX + scrollX - offsetX;
+                    const newTop = moveEvent.clientY + scrollY - offsetY;
+
+                    container.style.left = `${newLeft}px`;
+                    container.style.top = `${newTop}px`;
+
+                    this.checkAndScroll(moveEvent.clientX, moveEvent.clientY);
+                    this.updateConnections();
+                    this.ensureDocumentSize();
+
+                    moveEvent.preventDefault();
+                };
+
+                const mouseUpHandler = () => {
+                    container.classList.remove("grabbing");
+                    document.removeEventListener("mousemove", mouseMoveHandler);
+                    document.removeEventListener("mouseup", mouseUpHandler);
+
+                    this.updateConnections();
+                    this.ensureDocumentSize();
+                };
+
+                document.addEventListener("mousemove", mouseMoveHandler);
+                document.addEventListener("mouseup", mouseUpHandler);
+
+                event.preventDefault();
+            }
+        };
+
+        const touchStartHandler = (event: TouchEvent) => {
+            if ((event.target as HTMLElement).id !== `${this.containerId}-minimize-button`) {
+                container.classList.add("grabbing");
+                container.style.zIndex = "100";
+
+                const touch = event.touches[0];
+                const rect = container.getBoundingClientRect();
+                const offsetX = touch.clientX - rect.left;
+                const offsetY = touch.clientY - rect.top;
+
+                const touchMoveHandler = (moveEvent: TouchEvent) => {
+                    const touch = moveEvent.touches[0];
+                    const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+                    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+
+                    const newLeft = touch.clientX + scrollX - offsetX;
+                    const newTop = touch.clientY + scrollY - offsetY;
+
+                    container.style.left = `${newLeft}px`;
+                    container.style.top = `${newTop}px`;
+
+                    this.checkAndScroll(touch.clientX, touch.clientY);
+                    this.updateConnections();
+                    this.ensureDocumentSize();
+
+                    moveEvent.preventDefault();
+                };
+
+                const touchEndHandler = () => {
+                    container.classList.remove("grabbing");
+                    document.removeEventListener("touchmove", touchMoveHandler);
+                    document.removeEventListener("touchend", touchEndHandler);
+
+                    this.updateConnections();
+                    this.ensureDocumentSize();
+                };
+
+                document.addEventListener("touchmove", touchMoveHandler);
+                document.addEventListener("touchend", touchEndHandler);
+
+                event.preventDefault();
+            }
+        };
+
+
+        container.addEventListener("mousedown", mouseDownHandler);
+        container.addEventListener("touchstart", touchStartHandler);
+        container.style.cursor = "grab";
+    }
+
+    private removeContainerDragHandlers(container: HTMLElement) {
+
+        container.style.cursor = "";
     }
 
     private initializeMoveInput() {
