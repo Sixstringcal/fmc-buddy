@@ -475,3 +475,23 @@ button:focus {
   text-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
   transform: scale(1.1);
 }
+
+.delete-button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  font-size: 18px;
+  padding: 0px 8px;
+  border-radius: 4px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+  z-index: 15;
+}
+
+.delete-button:hover {
+  background-color: #c82333;
+}

@@ -47,6 +47,19 @@ export class CubeView {
             });
         }
 
+        const deleteButtonId = `${this.containerId}-delete-button`;
+        let deleteButton = document.getElementById(deleteButtonId);
+        if (!deleteButton) {
+            deleteButton = document.createElement("button");
+            deleteButton.id = deleteButtonId;
+            deleteButton.textContent = "×";
+            deleteButton.classList.add("delete-button");
+            deleteButton.title = "Delete this cube view";
+            
+            deleteButton.addEventListener("click", () => this.confirmDelete());
+            cubeContainer.appendChild(deleteButton);
+        }
+
         const minimizeButtonId = `${this.containerId}-minimize-button`;
         let minimizeButton = document.getElementById(minimizeButtonId);
         if (!minimizeButton) {
@@ -751,5 +764,29 @@ export class CubeView {
 
     public getContainerId(): string {
         return this.containerId;
+    }
+
+    private confirmDelete() {
+        if (confirm("Are you sure you want to delete this cube view?")) {
+            this.deleteCubeView();
+        }
+    }
+
+    private deleteCubeView() {
+        const cubeContainer = document.getElementById(this.containerId);
+        if (cubeContainer) {
+            cubeContainer.remove();
+        }
+
+        this.sourceConnections.forEach(connection => {
+            connection.remove();
+        });
+
+        this.targetConnections.forEach(connection => {
+            connection.remove();
+        });
+
+        this.sourceConnections = [];
+        this.targetConnections = [];
     }
 }
