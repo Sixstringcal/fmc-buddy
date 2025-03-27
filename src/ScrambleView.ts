@@ -6,12 +6,17 @@ export class ScrambleView {
     private scramble: string;
     private scrambleContainer: HTMLElement;
     private scrambleText: HTMLElement;
+    private inverseScrambleText: HTMLElement;
+    private showingInverse: boolean = false;
     private cubeViews: CubeView[] = [];
+    private inverseButton: HTMLButtonElement;
 
     constructor(scramble: string) {
         this.scramble = scramble;
         this.scrambleContainer = document.createElement("div");
         this.scrambleText = document.createElement("div");
+        this.inverseScrambleText = document.createElement("div");
+        this.inverseButton = document.createElement("button");
     }
 
     initialize() {
@@ -31,6 +36,7 @@ export class ScrambleView {
         this.scrambleContainer.appendChild(this.scrambleText);
 
         this.addEditButton();
+        this.addInverseScrambleButton();
         this.addNewScrambleButton();
         document.body.insertBefore(this.scrambleContainer, document.body.firstChild);
     }
@@ -72,6 +78,39 @@ export class ScrambleView {
         this.scrambleContainer.appendChild(editButton);
     }
 
+    private addInverseScrambleButton() {
+        this.inverseButton.textContent = "Show inverse";
+        this.inverseButton.classList.add("inverse-button");
+        this.inverseButton.title = "Toggle inverse scramble";
+
+        this.inverseScrambleText.id = "inverse-scramble-text";
+        this.inverseScrambleText.classList.add("inverse-scramble");
+        this.inverseScrambleText.style.display = "none";
+        this.scrambleContainer.appendChild(this.inverseScrambleText);
+
+        this.inverseButton.addEventListener("click", () => {
+            this.toggleInverseScramble();
+        });
+
+        this.scrambleContainer.appendChild(this.inverseButton);
+    }
+
+    private toggleInverseScramble() {
+        this.showingInverse = !this.showingInverse;
+        
+        if (this.showingInverse) {
+            if (this.cubeViews.length > 0) {
+                const inverseScramble = this.cubeViews[0].invertMoves(this.scramble);
+                this.inverseScrambleText.textContent = "Inverse: " + inverseScramble;
+                this.inverseScrambleText.style.display = "block";
+                this.inverseButton.textContent = "Hide inverse";
+            }
+        } else {
+            this.inverseScrambleText.style.display = "none";
+            this.inverseButton.textContent = "Show inverse";
+        }
+    }
+
     private addNewScrambleButton() {
         const newScrambleButton = document.createElement("button");
         newScrambleButton.classList.add("new-scramble-button");
@@ -99,6 +138,13 @@ export class ScrambleView {
         this.scramble = newScramble;
         this.scrambleText.textContent = newScramble;
         saveState("scramble", newScramble);
+
+        if (this.showingInverse) {
+            if (this.cubeViews.length > 0) {
+                const inverseScramble = this.cubeViews[0].invertMoves(newScramble);
+                this.inverseScrambleText.textContent = "Inverse: " + inverseScramble;
+            }
+        }
 
         this.cubeViews.forEach((cubeView) => {
             if (cubeView) {

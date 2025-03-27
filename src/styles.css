@@ -505,3 +505,36 @@ body {
 .delete-button:hover {
   background-color: #c82333;
 }
+
+.inverse-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  text-align: center;
+  font-size: 14px;
+  margin: 5px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: 
+    background-color 0.3s ease,
+    transform 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.inverse-button:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+}
+
+.inverse-button:active {
+  transform: scale(0.95);
+}
+
+.inverse-scramble {
+  margin-top: 5px;
+  font-style: italic;
+  color: #555;
+  padding-left: 10px;
+  font-size: 1.2rem;
+}

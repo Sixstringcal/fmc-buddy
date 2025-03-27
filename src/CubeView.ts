@@ -610,7 +610,7 @@ export class CubeView {
         }
     }
 
-    private invertMoves(moves: string): string {
+    public invertMoves(moves: string): string {
         let inverseMoves = "";
         const moveList = moves.split(" ");
         moveList.forEach((move) => {
