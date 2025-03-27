@@ -55,7 +55,7 @@ export class CubeView {
             deleteButton.textContent = "×";
             deleteButton.classList.add("delete-button");
             deleteButton.title = "Delete this cube view";
-            
+
             deleteButton.addEventListener("click", () => this.confirmDelete());
             cubeContainer.appendChild(deleteButton);
         }
@@ -92,14 +92,25 @@ export class CubeView {
                 offsetX = event.clientX - cubeContainer.getBoundingClientRect().left;
                 offsetY = event.clientY - cubeContainer.getBoundingClientRect().top;
                 document.body.classList.add("grabbing");
+                cubeContainer.style.zIndex = "100";
+                event.preventDefault();
             });
 
             document.addEventListener("mousemove", (event) => {
                 if (isDragging) {
-                    cubeContainer.style.left = `${event.clientX - offsetX}px`;
-                    cubeContainer.style.top = `${event.clientY - offsetY}px`;
+                    const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+                    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+                    const newLeft = event.clientX + scrollX - offsetX;
+                    const newTop = event.clientY + scrollY - offsetY;
 
+                    cubeContainer.style.left = `${newLeft}px`;
+                    cubeContainer.style.top = `${newTop}px`;
+
+                    this.checkAndScroll(event.clientX, event.clientY);
                     this.updateConnections();
+                    this.ensureDocumentSize();
+
+                    event.preventDefault();
                 }
             });
 
@@ -109,6 +120,7 @@ export class CubeView {
                     document.body.classList.remove("grabbing");
 
                     this.updateConnections();
+                    this.ensureDocumentSize();
                 }
             });
 
@@ -117,16 +129,28 @@ export class CubeView {
                 const touch = event.touches[0];
                 offsetX = touch.clientX - cubeContainer.getBoundingClientRect().left;
                 offsetY = touch.clientY - cubeContainer.getBoundingClientRect().top;
+
+                cubeContainer.style.zIndex = "100";
+
                 event.preventDefault();
             });
 
             document.addEventListener("touchmove", (event) => {
                 if (isDragging) {
                     const touch = event.touches[0];
-                    cubeContainer.style.left = `${touch.clientX - offsetX}px`;
-                    cubeContainer.style.top = `${touch.clientY - offsetY}px`;
 
+                    const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+                    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+
+                    const newLeft = touch.clientX + scrollX - offsetX;
+                    const newTop = touch.clientY + scrollY - offsetY;
+
+                    cubeContainer.style.left = `${newLeft}px`;
+                    cubeContainer.style.top = `${newTop}px`;
+
+                    this.checkAndScroll(touch.clientX, touch.clientY);
                     this.updateConnections();
+                    this.ensureDocumentSize();
 
                     event.preventDefault();
                 }
@@ -708,6 +732,7 @@ export class CubeView {
             newContainer.style.left = `${originalRect.right + 50}px`;
 
             this.createConnectionLine(originalContainer, newContainer);
+            this.ensureDocumentSize();
         }
     }
 
@@ -788,5 +813,52 @@ export class CubeView {
 
         this.sourceConnections = [];
         this.targetConnections = [];
+    }
+
+    private checkAndScroll(clientX: number, clientY: number) {
+        const scrollSpeed = 15;
+        const scrollBoundary = 50;
+
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+
+        if (clientX > viewportWidth - scrollBoundary) {
+            window.scrollBy(scrollSpeed, 0);
+        }
+
+        else if (clientX < scrollBoundary) {
+            window.scrollBy(-scrollSpeed, 0);
+        }
+
+        if (clientY > viewportHeight - scrollBoundary) {
+            window.scrollBy(0, scrollSpeed);
+        }
+
+        else if (clientY < scrollBoundary) {
+            window.scrollBy(0, -scrollSpeed);
+        }
+    }
+
+    private ensureDocumentSize() {
+        const containers = document.querySelectorAll('.cube-container');
+
+        let maxRight = window.innerWidth;
+        let maxBottom = window.innerHeight;
+
+        containers.forEach(container => {
+            const el = container as HTMLElement;
+            const rect = el.getBoundingClientRect();
+
+            const right = rect.right + window.scrollX + 300;
+            const bottom = rect.bottom + window.scrollY + 300;
+
+            maxRight = Math.max(maxRight, right);
+            maxBottom = Math.max(maxBottom, bottom);
+        });
+
+        document.documentElement.style.minWidth = `${maxRight}px`;
+        document.documentElement.style.minHeight = `${maxBottom}px`;
+        document.body.style.minWidth = `${maxRight}px`;
+        document.body.style.minHeight = `${maxBottom}px`;
     }
 }

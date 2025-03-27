@@ -1,3 +1,29 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+}
+
+body {
+  font-family: "Arial", sans-serif;
+  background: linear-gradient(135deg, #e3f2fd, #fffaf0);
+  color: #333;
+  position: relative;
+}
+
+.document-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+}
+
 .cube-container {
   display: flex;
   flex-direction: row;
@@ -51,24 +77,6 @@
 .move-input::placeholder {
   color: #ffa500;
   opacity: 0.8;
-}
-
-body {
-  font-family: "Arial", sans-serif;
-  background: linear-gradient(135deg, #e3f2fd, #fffaf0);
-  color: #333;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-}
-
-input:focus,
-button:focus {
-  outline: none;
 }
 
 .scramble-container {
