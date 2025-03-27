@@ -2,7 +2,7 @@ import { randomScrambleForEvent } from "cubing/scramble";
 import { CubeView } from "./CubeView";
 import { Timer } from "./Timer";
 import { ScrambleView } from "./ScrambleView";
-import { loadState } from "./stateManager";
+import { loadState, saveState } from "./stateManager";
 
 let scramble: string = "";
 let cubeViewCount = 0;
@@ -20,6 +20,7 @@ const cubeViews: CubeView[] = [];
     scramble = loadState("scramble", "");
     if (scramble.trim() === "") {
         scramble = (await randomScrambleForEvent("333fm")).toString();
+        saveState("scramble", scramble);
     }
     scrambleView.updateScramble(scramble);
 
@@ -31,42 +32,80 @@ const cubeViews: CubeView[] = [];
     addButton.textContent = "+";
     addButton.classList.add("add-button");
     addButton.addEventListener("click", () => {
-        cubeViewCount++;
-        const cubeView = new CubeView(scramble, `cube-container-${cubeViewCount}`);
-        cubeView.initialize();
-        
-        setTimeout(() => {
-            const newCubeContainer = document.getElementById(`cube-container-${cubeViewCount}`);
-            if (newCubeContainer) {
-                updateDocumentBoundaries();
-            }
-        }, 100);
-
-        scrambleView.registerCubeView(cubeView);
+        createNewCubeView();
     });
     document.body.appendChild(addButton);
 
-    cubeViewCount++;
-    const cubeView = new CubeView(scramble, `cube-container-${cubeViewCount}`);
-    cubeView.initialize();
+    await loadSavedCubeViews(scrambleView);
 
-    scrambleView.registerCubeView(cubeView);
+    if (cubeViews.length === 0) {
+        createNewCubeView();
+    }
+
+    setTimeout(() => {
+        restoreConnections();
+    }, 1000);
 
     setTimeout(() => {
         updateDocumentBoundaries();
-        document.querySelectorAll('.cube-container').forEach((container, index) => {
-            const el = container as HTMLElement;
-            if (!el.style.left || !el.style.top) {
-                el.style.left = `${100}px`;
-                el.style.top = `${100 + index * 50}px`;
-            }
-        });
     }, 500);
     
     window.addEventListener('resize', updateDocumentBoundaries);
     window.addEventListener('scroll', updateDocumentBoundaries);
     window.addEventListener('load', updateDocumentBoundaries);
+    
+    setInterval(() => {
+        saveState("scramble", scramble);
+    }, 5000);
 })();
+
+async function loadSavedCubeViews(scrambleView: ScrambleView) {
+    const savedCount = loadState<number>("cubeViewCount", 0);
+    const savedViewIds = loadState<string[]>("cubeViewIds", []);
+    
+    cubeViewCount = Math.max(savedCount, 0);
+    
+    for (const viewId of savedViewIds) {
+        const viewState = loadState(`cubeView_${viewId}`, null);
+        if (viewState) {
+            const cubeView = new CubeView(scramble, viewId, viewState);
+            cubeView.initialize();
+            cubeViews.push(cubeView);
+            scrambleView.registerCubeView(cubeView);
+        }
+    }
+}
+
+function restoreConnections() {
+    const connections = loadState<{sourceId: string, targetId: string}[]>("cubeViewConnections", []);
+    
+    for (const connection of connections) {
+        const sourceView = cubeViews.find(view => view.getContainerId() === connection.sourceId);
+        if (sourceView) {
+            sourceView.createConnectionFromState(connection.targetId);
+        }
+    }
+}
+
+function createNewCubeView() {
+    cubeViewCount++;
+    const containerId = `cube-container-${cubeViewCount}`;
+    const cubeView = new CubeView(scramble, containerId);
+    cubeView.initialize();
+    cubeViews.push(cubeView);
+    
+    setTimeout(() => {
+        const newCubeContainer = document.getElementById(containerId);
+        if (newCubeContainer) {
+            if (!newCubeContainer.style.left || !newCubeContainer.style.top) {
+                newCubeContainer.style.left = `${100 + (cubeViewCount * 20)}px`;
+                newCubeContainer.style.top = `${100 + (cubeViewCount * 20)}px`;
+            }
+            updateDocumentBoundaries();
+            cubeView.saveState();
+        }
+    }, 100);
+}
 
 function updateDocumentBoundaries() {
     const containers = document.querySelectorAll('.cube-container');

@@ -1,10 +1,33 @@
 import { TwistyPlayer } from "cubing/twisty";
 import { Connection } from "./Connection";
+import { saveState, loadState } from "./stateManager";
 
 const validMoveRegex = /^(R|L|F|B|U|D|x|y|z|Rw|Lw|Fw|Bw|Uw|Dw)(2|'|w2|w')?$/;
 
 const BLUE = "#007bff";
 const ORANGE = "#ffa500";
+
+interface CubeViewState {
+    id: string;
+    moves: string;
+    position: {
+        left: number;
+        top: number;
+    };
+    isMinimized: boolean;
+    isNormal: boolean;
+    secretRotation: string;
+}
+
+interface AppState {
+    cubeViewCount: number;
+    cubeViews: CubeViewState[];
+    connections: {
+        sourceId: string;
+        targetId: string;
+    }[];
+    scramble: string;
+}
 
 export class CubeView {
     private scramble: string;
@@ -20,7 +43,7 @@ export class CubeView {
     private sourceConnections: Connection[] = [];
     private targetConnections: Connection[] = [];
 
-    constructor(scramble: string, containerId: string) {
+    constructor(scramble: string, containerId: string, state?: CubeViewState) {
         this.scramble = scramble;
         this.containerId = containerId;
         this.twistyPlayer = new TwistyPlayer({
@@ -29,6 +52,13 @@ export class CubeView {
             controlPanel: "none",
             cameraLatitudeLimit: 99999999
         });
+
+        if (state) {
+            this.previousMoves = state.moves;
+            this.isNormal = state.isNormal;
+            this.isMinimized = state.isMinimized;
+            this.secretRotation = state.secretRotation;
+        }
     }
 
     initialize() {
@@ -45,6 +75,12 @@ export class CubeView {
                 });
                 cubeContainer.style.zIndex = "10";
             });
+        }
+
+        const state = this.loadState();
+        if (state && state.position) {
+            cubeContainer.style.left = `${state.position.left}px`;
+            cubeContainer.style.top = `${state.position.top}px`;
         }
 
         const deleteButtonId = `${this.containerId}-delete-button`;
@@ -109,6 +145,7 @@ export class CubeView {
                     this.checkAndScroll(event.clientX, event.clientY);
                     this.updateConnections();
                     this.ensureDocumentSize();
+                    this.saveState();
 
                     event.preventDefault();
                 }
@@ -121,6 +158,7 @@ export class CubeView {
 
                     this.updateConnections();
                     this.ensureDocumentSize();
+                    this.saveState();
                 }
             });
 
@@ -303,6 +341,68 @@ export class CubeView {
 
         this.initializeMoveInput();
         this.updateMinimizedState();
+
+        if (this.previousMoves) {
+            this.applyMoves(this.previousMoves, true);
+            const moveInput = document.getElementById(`${this.containerId}-move-input`) as HTMLTextAreaElement;
+            if (moveInput) {
+                moveInput.value = this.previousMoves;
+            }
+        }
+    }
+
+    public saveState() {
+        const cubeContainer = document.getElementById(this.containerId);
+        if (!cubeContainer) return;
+
+        const moveInput = document.getElementById(`${this.containerId}-move-input`) as HTMLTextAreaElement;
+
+        const rect = cubeContainer.getBoundingClientRect();
+        const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+        const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+
+        const state: CubeViewState = {
+            id: this.containerId,
+            moves: moveInput ? moveInput.value : this.previousMoves,
+            position: {
+                left: rect.left + scrollX,
+                top: rect.top + scrollY
+            },
+            isMinimized: this.isMinimized,
+            isNormal: this.isNormal,
+            secretRotation: this.secretRotation
+        };
+
+        saveState(`cubeView_${this.containerId}`, state);
+
+        this.saveAppState();
+    }
+
+    private loadState(): CubeViewState | null {
+        return loadState<CubeViewState | null>(`cubeView_${this.containerId}`, null);
+    }
+
+    private saveAppState() {
+        const containers = document.querySelectorAll('.cube-container');
+        const cubeViewIds: string[] = [];
+
+        containers.forEach(container => {
+            cubeViewIds.push(container.id);
+        });
+
+        const connections: { sourceId: string, targetId: string }[] = [];
+        this.sourceConnections.forEach(connection => {
+            connections.push({
+                sourceId: connection.getSourceId(),
+                targetId: connection.getTargetId()
+            });
+        });
+
+        saveState('cubeViewConnections', connections);
+
+        saveState('cubeViewIds', cubeViewIds);
+
+        saveState('cubeViewCount', cubeViewIds.length);
     }
 
     private toggleMode(button: HTMLButtonElement) {
@@ -310,11 +410,13 @@ export class CubeView {
         button.textContent = this.isNormal ? "Normal" : "Inverse";
         button.style.backgroundColor = this.isNormal ? BLUE : ORANGE;
         this.applyMoves(this.previousMoves.trim(), true);
+        this.saveState();
     }
 
     private toggleMinimized() {
         this.isMinimized = !this.isMinimized;
         this.updateMinimizedState();
+        this.saveState();
     }
 
     private updateMinimizedState() {
@@ -530,6 +632,7 @@ export class CubeView {
             }
 
             previousValue = input.value;
+            this.saveState();
 
             if (this.isMinimized) {
                 const textPreview = document.getElementById(`${this.containerId}-text-preview`);
@@ -804,6 +907,7 @@ export class CubeView {
         }
 
         this.applyMoves(this.previousMoves, true);
+        this.saveState();
     }
 
     private duplicateCubeView() {
@@ -845,6 +949,13 @@ export class CubeView {
             this.createConnectionLine(originalContainer, newContainer);
             this.ensureDocumentSize();
         }
+
+        setTimeout(() => {
+            if (newCubeView) {
+                newCubeView.saveState();
+            }
+            this.saveState();
+        }, 200);
     }
 
     private applyMovesToNewCubeView(cubeView: CubeView, content: string, cursorPosition: number) {
@@ -888,6 +999,34 @@ export class CubeView {
         this.targetConnections.push(connection);
     }
 
+    public createConnectionFromState(targetId: string) {
+        const fromContainer = document.getElementById(this.containerId);
+        const toContainer = document.getElementById(targetId);
+
+        if (fromContainer && toContainer) {
+            const connection = new Connection(fromContainer.id, toContainer.id);
+            this.sourceConnections.push(connection);
+
+            const targetCubeViewElements = document.querySelectorAll('.cube-container');
+            for (let i = 0; i < targetCubeViewElements.length; i++) {
+                const element = targetCubeViewElements[i] as HTMLElement;
+                if (element.id === toContainer.id) {
+                    const targetId = element.id;
+                    setTimeout(() => {
+                        const moveInput = document.getElementById(`${targetId}-move-input`);
+                        if (moveInput) {
+                            const event = new CustomEvent('addTargetConnection', {
+                                detail: { connection: connection }
+                            });
+                            moveInput.dispatchEvent(event);
+                        }
+                    }, 100);
+                    break;
+                }
+            }
+        }
+    }
+
     private updateConnections() {
         this.sourceConnections.forEach(connection => {
             connection.updatePosition();
@@ -924,6 +1063,10 @@ export class CubeView {
 
         this.sourceConnections = [];
         this.targetConnections = [];
+
+        localStorage.removeItem(`cubeView_${this.containerId}`);
+
+        this.saveAppState();
     }
 
     private checkAndScroll(clientX: number, clientY: number) {
