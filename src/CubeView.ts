@@ -3,6 +3,7 @@ import { Connection } from "./Connection";
 import { saveState, loadState } from "./stateManager";
 
 const validMoveRegex = /^(R|L|F|B|U|D|x|y|z|Rw|Lw|Fw|Bw|Uw|Dw)(2|'|w2|w')?$/;
+const countableMoveRegex = /^(R|L|F|B|U|D|Rw|Lw|Fw|Bw|Uw|Dw)(2|'|w2|w')?$/;
 
 const BLUE = "#007bff";
 const ORANGE = "#ffa500";
@@ -850,8 +851,8 @@ export class CubeView {
     private updateMoveCounter() {
         const moveCounter = document.getElementById(`${this.containerId}-move-counter`) as HTMLDivElement;
         if (moveCounter) {
-            const normalMoveCount = this.normalMoves.trim().split(/\s+/).filter((move) => validMoveRegex.test(move)).length;
-            const inverseMoveCount = this.inverseMoves.trim().split(/\s+/).filter((move) => validMoveRegex.test(move)).length;
+            const normalMoveCount = this.normalMoves.trim().split(/\s+/).filter((move) => countableMoveRegex.test(move)).length;
+            const inverseMoveCount = this.inverseMoves.trim().split(/\s+/).filter((move) => countableMoveRegex.test(move)).length;
             const totalMoves = normalMoveCount + inverseMoveCount;
             moveCounter.textContent = `Moves: ${totalMoves}`;
         }
