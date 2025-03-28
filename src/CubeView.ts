@@ -18,7 +18,7 @@ interface CubeViewState {
     isMinimized: boolean;
     isNormal: boolean;
     secretRotation: string;
-    isGood: boolean | null; // Add a property to track the view's status
+    isGood: boolean | null;
 }
 
 interface AppState {
@@ -41,7 +41,7 @@ export class CubeView {
     private isNormal: boolean = true;
     private isMinimized: boolean = false;
     private secretRotation: string = "";
-    private isGood: boolean | null = null; // Add a property to track the view's status
+    private isGood: boolean | null = null;
 
     private sourceConnections: Connection[] = [];
     private targetConnections: Connection[] = [];
@@ -61,7 +61,7 @@ export class CubeView {
             this.isNormal = state.isNormal;
             this.isMinimized = state.isMinimized;
             this.secretRotation = state.secretRotation;
-            this.isGood = state.isGood || null; // Load the view's status
+            this.isGood = state.isGood || null;
         }
     }
 
@@ -349,14 +349,14 @@ export class CubeView {
 
             const thumbsUpButton = document.createElement("button");
             thumbsUpButton.innerHTML = "👍";
-            thumbsUpButton.classList.add("rating-button");
+            thumbsUpButton.classList.add("rating-button", "thumbs-up");
             thumbsUpButton.style.marginRight = "10px";
             thumbsUpButton.addEventListener("click", () => this.markAsGood());
             ratingWrapper.appendChild(thumbsUpButton);
 
             const thumbsDownButton = document.createElement("button");
             thumbsDownButton.innerHTML = "👎";
-            thumbsDownButton.classList.add("rating-button");
+            thumbsDownButton.classList.add("rating-button", "thumbs-down");
             thumbsDownButton.addEventListener("click", () => this.markAsBad());
             ratingWrapper.appendChild(thumbsDownButton);
         }
@@ -394,14 +394,22 @@ export class CubeView {
 
     private updateViewStatus() {
         const cubeContainer = document.getElementById(this.containerId);
-        if (!cubeContainer) return;
+        const thumbsUpButton = document.querySelector(`#${this.containerId}-rating-wrapper .thumbs-up`);
+        const thumbsDownButton = document.querySelector(`#${this.containerId}-rating-wrapper .thumbs-down`);
+
+        if (!cubeContainer || !thumbsUpButton || !thumbsDownButton) return;
+
+        thumbsUpButton.classList.remove("active");
+        thumbsDownButton.classList.remove("active");
 
         if (this.isGood === true) {
             cubeContainer.style.backgroundColor = "lightgreen";
+            thumbsUpButton.classList.add("active");
         } else if (this.isGood === false) {
             cubeContainer.style.backgroundColor = "lightcoral";
+            thumbsDownButton.classList.add("active");
         } else {
-            cubeContainer.style.backgroundColor = ""; // Reset to default
+            cubeContainer.style.backgroundColor = "";
         }
     }
 
@@ -425,7 +433,7 @@ export class CubeView {
             isMinimized: this.isMinimized,
             isNormal: this.isNormal,
             secretRotation: this.secretRotation,
-            isGood: this.isGood // Save the view's status
+            isGood: this.isGood
         };
 
         saveState(`cubeView_${this.containerId}`, state);
@@ -436,7 +444,7 @@ export class CubeView {
     private loadState(): CubeViewState | null {
         const state = loadState<CubeViewState | null>(`cubeView_${this.containerId}`, null);
         if (state) {
-            this.isGood = state.isGood || null; // Load the view's status
+            this.isGood = state.isGood || null;
             this.updateViewStatus();
         }
         return state;

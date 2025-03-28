@@ -516,7 +516,7 @@ body {
   margin: 5px;
   cursor: pointer;
   border-radius: 5px;
-  transition: 
+  transition:
     background-color 0.3s ease,
     transform 0.2s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
@@ -540,25 +540,27 @@ body {
 }
 
 .rating-button {
-  font-size: 16px; /* Reduced font size */
-  padding: 3px 6px; /* Reduced padding */
+  font-size: 16px;
+  padding: 3px 6px;
   border: none;
-  border-radius: 3px; /* Reduced border radius */
+  border-radius: 3px;
   cursor: pointer;
-  transition: background-color 0.3s, transform 0.2s;
+  transition:
+    background-color 0.3s,
+    transform 0.2s;
 }
 
 .rating-button:hover {
-  transform: scale(1.05); /* Slightly reduced hover effect */
+  transform: scale(1.05);
 }
 
 .thumbs-up {
-  background-color: #e6f9ed; /* Softer green */
+  background-color: #e6f9ed;
   color: #28a745;
 }
 
 .thumbs-down {
-  background-color: #fcebea; /* Softer red */
+  background-color: #fcebea;
   color: #dc3545;
 }
 
@@ -568,6 +570,16 @@ body {
 }
 
 .thumbs-down.active {
+  background-color: #dc3545;
+  color: white;
+}
+
+.rating-button.active.thumbs-up {
+  background-color: #28a745;
+  color: white;
+}
+
+.rating-button.active.thumbs-down {
   background-color: #dc3545;
   color: white;
 }
