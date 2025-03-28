@@ -538,3 +538,36 @@ body {
   padding-left: 10px;
   font-size: 1.2rem;
 }
+
+.rating-button {
+  font-size: 16px; /* Reduced font size */
+  padding: 3px 6px; /* Reduced padding */
+  border: none;
+  border-radius: 3px; /* Reduced border radius */
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.rating-button:hover {
+  transform: scale(1.05); /* Slightly reduced hover effect */
+}
+
+.thumbs-up {
+  background-color: #e6f9ed; /* Softer green */
+  color: #28a745;
+}
+
+.thumbs-down {
+  background-color: #fcebea; /* Softer red */
+  color: #dc3545;
+}
+
+.rating-button.active {
+  background-color: #28a745;
+  color: white;
+}
+
+.thumbs-down.active {
+  background-color: #dc3545;
+  color: white;
+}

@@ -18,6 +18,7 @@ interface CubeViewState {
     isMinimized: boolean;
     isNormal: boolean;
     secretRotation: string;
+    isGood: boolean | null; // Add a property to track the view's status
 }
 
 interface AppState {
@@ -40,6 +41,7 @@ export class CubeView {
     private isNormal: boolean = true;
     private isMinimized: boolean = false;
     private secretRotation: string = "";
+    private isGood: boolean | null = null; // Add a property to track the view's status
 
     private sourceConnections: Connection[] = [];
     private targetConnections: Connection[] = [];
@@ -59,6 +61,7 @@ export class CubeView {
             this.isNormal = state.isNormal;
             this.isMinimized = state.isMinimized;
             this.secretRotation = state.secretRotation;
+            this.isGood = state.isGood || null; // Load the view's status
         }
     }
 
@@ -333,6 +336,31 @@ export class CubeView {
             inputWrapper.appendChild(duplicateButton);
         }
 
+        const ratingWrapperId = `${this.containerId}-rating-wrapper`;
+        let ratingWrapper = document.getElementById(ratingWrapperId);
+        if (!ratingWrapper) {
+            ratingWrapper = document.createElement("div");
+            ratingWrapper.id = ratingWrapperId;
+            ratingWrapper.classList.add("rating-wrapper");
+            ratingWrapper.style.display = "flex";
+            ratingWrapper.style.justifyContent = "center";
+            ratingWrapper.style.marginTop = "10px";
+            columnWrapper.appendChild(ratingWrapper);
+
+            const thumbsUpButton = document.createElement("button");
+            thumbsUpButton.innerHTML = "👍";
+            thumbsUpButton.classList.add("rating-button");
+            thumbsUpButton.style.marginRight = "10px";
+            thumbsUpButton.addEventListener("click", () => this.markAsGood());
+            ratingWrapper.appendChild(thumbsUpButton);
+
+            const thumbsDownButton = document.createElement("button");
+            thumbsDownButton.innerHTML = "👎";
+            thumbsDownButton.classList.add("rating-button");
+            thumbsDownButton.addEventListener("click", () => this.markAsBad());
+            ratingWrapper.appendChild(thumbsDownButton);
+        }
+
         cubeContainer.insertBefore(this.twistyPlayer, columnWrapper);
 
         const splitScramble = this.scramble.split(" ");
@@ -349,6 +377,31 @@ export class CubeView {
             if (moveInput) {
                 moveInput.value = this.previousMoves;
             }
+        }
+    }
+
+    private markAsGood() {
+        this.isGood = true;
+        this.updateViewStatus();
+        this.saveState();
+    }
+
+    private markAsBad() {
+        this.isGood = false;
+        this.updateViewStatus();
+        this.saveState();
+    }
+
+    private updateViewStatus() {
+        const cubeContainer = document.getElementById(this.containerId);
+        if (!cubeContainer) return;
+
+        if (this.isGood === true) {
+            cubeContainer.style.backgroundColor = "lightgreen";
+        } else if (this.isGood === false) {
+            cubeContainer.style.backgroundColor = "lightcoral";
+        } else {
+            cubeContainer.style.backgroundColor = ""; // Reset to default
         }
     }
 
@@ -371,7 +424,8 @@ export class CubeView {
             },
             isMinimized: this.isMinimized,
             isNormal: this.isNormal,
-            secretRotation: this.secretRotation
+            secretRotation: this.secretRotation,
+            isGood: this.isGood // Save the view's status
         };
 
         saveState(`cubeView_${this.containerId}`, state);
@@ -380,7 +434,12 @@ export class CubeView {
     }
 
     private loadState(): CubeViewState | null {
-        return loadState<CubeViewState | null>(`cubeView_${this.containerId}`, null);
+        const state = loadState<CubeViewState | null>(`cubeView_${this.containerId}`, null);
+        if (state) {
+            this.isGood = state.isGood || null; // Load the view's status
+            this.updateViewStatus();
+        }
+        return state;
     }
 
     private saveAppState() {
