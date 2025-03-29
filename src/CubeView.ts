@@ -452,7 +452,6 @@ export class CubeView {
     });
 
     this.initializeMoveInput();
-    this.updateMinimizedState();
 
     if (this.previousMoves) {
       const moveInput = document.getElementById(
@@ -464,11 +463,13 @@ export class CubeView {
       this.applyMoves(this.previousMoves, true);
     }
 
+    this.updateMinimizedState();
+
     setTimeout(() => this.updateViewStatus(), 0);
   }
 
   private markAsGood() {
-    if (this.isGood) {
+    if (this.isGood === true) {
       this.isGood = null;
     } else {
       this.isGood = true;
@@ -478,7 +479,7 @@ export class CubeView {
   }
 
   private markAsBad() {
-    if (this.isGood) {
+    if (this.isGood === false) {
       this.isGood = null;
     } else {
       this.isGood = false;
@@ -501,10 +502,10 @@ export class CubeView {
     thumbsUpButton.classList.remove("active");
     thumbsDownButton.classList.remove("active");
 
-    if (this.isGood) {
+    if (this.isGood === true) {
       cubeContainer.style.backgroundColor = "lightgreen";
       thumbsUpButton.classList.add("active");
-    } else if (!this.isGood) {
+    } else if (this.isGood === false) {
       cubeContainer.style.backgroundColor = "lightcoral";
       thumbsDownButton.classList.add("active");
     } else {
@@ -681,17 +682,23 @@ export class CubeView {
         textPreview.style.display = "block";
       }
 
-      if (moveInput) {
-        const text = moveInput.value || "";
+      let previewText = "(Empty)";
+      if (moveInput && moveInput.value) {
+        const text = moveInput.value;
         const firstLine = text.split("\n")[0] || "";
-        const preview =
+        previewText =
           firstLine.length > 30
             ? firstLine.substring(0, 27) + "..."
             : firstLine;
-        textPreview.textContent = preview || "(Empty)";
-      } else {
-        textPreview.textContent = "(Empty)";
+      } else if (this.previousMoves) {
+        const firstLine = this.previousMoves.split("\n")[0] || "";
+        previewText =
+          firstLine.length > 30
+            ? firstLine.substring(0, 27) + "..."
+            : firstLine;
       }
+
+      textPreview.textContent = previewText || "(Empty)";
 
       Array.from(cubeContainer.children).forEach((child) => {
         if (
