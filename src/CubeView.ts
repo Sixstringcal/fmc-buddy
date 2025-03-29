@@ -455,13 +455,13 @@ export class CubeView {
     this.updateMinimizedState();
 
     if (this.previousMoves) {
-      this.applyMoves(this.previousMoves, true);
       const moveInput = document.getElementById(
         `${this.containerId}-move-input`
       ) as HTMLTextAreaElement;
       if (moveInput) {
         moveInput.value = this.previousMoves;
       }
+      this.applyMoves(this.previousMoves, true);
     }
   }
 
