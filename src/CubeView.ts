@@ -19,6 +19,10 @@ interface CubeViewState {
   isNormal: boolean;
   secretRotation: string;
   isGood: boolean | null;
+  textboxDimensions?: {
+    width: number;
+    height: number;
+  };
 }
 
 interface AppState {
@@ -64,6 +68,16 @@ export class CubeView {
       this.isMinimized = state.isMinimized;
       this.secretRotation = state.secretRotation;
       this.isGood = state.isGood || null;
+
+      if (state.textboxDimensions) {
+        const moveInput = document.getElementById(
+          `${this.containerId}-move-input`
+        ) as HTMLTextAreaElement;
+        if (moveInput) {
+          moveInput.style.width = `${state.textboxDimensions.width}px`;
+          moveInput.style.height = `${state.textboxDimensions.height}px`;
+        }
+      }
     }
   }
 
@@ -353,6 +367,14 @@ export class CubeView {
       inputWrapper.appendChild(moveInput);
     }
 
+    if (state && state.textboxDimensions) {
+      moveInput.style.width = `${state.textboxDimensions.width}px`;
+      moveInput.style.height = `${state.textboxDimensions.height}px`;
+    }
+
+    moveInput.addEventListener("mouseup", () => this.saveState());
+    moveInput.addEventListener("touchend", () => this.saveState());
+
     const duplicateButtonId = `${this.containerId}-duplicate-button`;
     let duplicateButton = document.getElementById(duplicateButtonId);
     if (!duplicateButton) {
@@ -503,6 +525,12 @@ export class CubeView {
       isNormal: this.isNormal,
       secretRotation: this.secretRotation,
       isGood: this.isGood,
+      textboxDimensions: moveInput
+        ? {
+            width: moveInput.offsetWidth,
+            height: moveInput.offsetHeight,
+          }
+        : undefined,
     };
 
     saveState(`cubeView_${this.containerId}`, state);
@@ -518,6 +546,16 @@ export class CubeView {
     if (state) {
       this.isGood = state.isGood || null;
       this.updateViewStatus();
+
+      if (state.textboxDimensions) {
+        const moveInput = document.getElementById(
+          `${this.containerId}-move-input`
+        ) as HTMLTextAreaElement;
+        if (moveInput) {
+          moveInput.style.width = `${state.textboxDimensions.width}px`;
+          moveInput.style.height = `${state.textboxDimensions.height}px`;
+        }
+      }
     }
     return state;
   }
