@@ -928,9 +928,34 @@ export class CubeView {
     private updateMoveCounter() {
         const moveCounter = document.getElementById(`${this.containerId}-move-counter`) as HTMLDivElement;
         if (moveCounter) {
-            const normalMoveCount = this.normalMoves.trim().split(/\s+/).filter((move) => countableMoveRegex.test(move)).length;
-            const inverseMoveCount = this.inverseMoves.trim().split(/\s+/).filter((move) => countableMoveRegex.test(move)).length;
+            const countMoves = (moves: string): number => {
+                const moveList = moves.trim().split(/\s+/);
+                let count = 0;
+                let i = 0;
+
+                while (i < moveList.length) {
+                    const currentMove = moveList[i];
+                    if (currentMove.endsWith("2")) {
+                        count++;
+                        i++;
+                    } else if (i + 1 < moveList.length && moveList[i] === moveList[i + 1]) {
+                        count++;
+                        i += 2;
+                    } else if (countableMoveRegex.test(currentMove)) {
+                        count++;
+                        i++;
+                    } else {
+                        i++;
+                    }
+                }
+
+                return count;
+            };
+
+            const normalMoveCount = countMoves(this.normalMoves);
+            const inverseMoveCount = countMoves(this.inverseMoves);
             const totalMoves = normalMoveCount + inverseMoveCount;
+
             moveCounter.textContent = `Moves: ${totalMoves}`;
         }
     }
