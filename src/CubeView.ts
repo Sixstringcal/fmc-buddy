@@ -466,13 +466,21 @@ export class CubeView {
   }
 
   private markAsGood() {
-    this.isGood = true;
+    if (this.isGood) {
+      this.isGood = null;
+    } else {
+      this.isGood = true;
+    }
     this.updateViewStatus();
     this.saveState();
   }
 
   private markAsBad() {
-    this.isGood = false;
+    if (this.isGood) {
+      this.isGood = null;
+    } else {
+      this.isGood = false;
+    }
     this.updateViewStatus();
     this.saveState();
   }
@@ -491,10 +499,10 @@ export class CubeView {
     thumbsUpButton.classList.remove("active");
     thumbsDownButton.classList.remove("active");
 
-    if (this.isGood === true) {
+    if (this.isGood) {
       cubeContainer.style.backgroundColor = "lightgreen";
       thumbsUpButton.classList.add("active");
-    } else if (this.isGood === false) {
+    } else if (!this.isGood) {
       cubeContainer.style.backgroundColor = "lightcoral";
       thumbsDownButton.classList.add("active");
     } else {
@@ -728,7 +736,8 @@ export class CubeView {
     const mouseDownHandler = (event: MouseEvent) => {
       if (
         (event.target as HTMLElement).id !==
-        `${this.containerId}-minimize-button` && this.isMinimized
+          `${this.containerId}-minimize-button` &&
+        this.isMinimized
       ) {
         container.classList.add("grabbing");
         container.style.zIndex = "100";
