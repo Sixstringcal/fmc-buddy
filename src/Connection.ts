@@ -52,24 +52,74 @@ export class Connection {
     const sourceRect = sourceContainer.getBoundingClientRect();
     const targetRect = targetContainer.getBoundingClientRect();
 
-    const sourceY = sourceRect.top + scrollY + sourceRect.height / 2;
-    const targetY = targetRect.top + scrollY + targetRect.height / 2;
+    const sourceSides = [
+      {
+        x: sourceRect.left + scrollX,
+        y: sourceRect.top + scrollY + sourceRect.height / 2,
+      },
+      {
+        x: sourceRect.right + scrollX,
+        y: sourceRect.top + scrollY + sourceRect.height / 2,
+      },
+      {
+        x: sourceRect.left + scrollX + sourceRect.width / 2,
+        y: sourceRect.top + scrollY,
+      },
+      {
+        x: sourceRect.left + scrollX + sourceRect.width / 2,
+        y: sourceRect.bottom + scrollY,
+      },
+    ];
 
-    const sourceX = sourceRect.right + scrollX;
-    const targetX = targetRect.left + scrollX;
+    const targetSides = [
+      {
+        x: targetRect.left + scrollX,
+        y: targetRect.top + scrollY + targetRect.height / 2,
+      },
+      {
+        x: targetRect.right + scrollX,
+        y: targetRect.top + scrollY + targetRect.height / 2,
+      },
+      {
+        x: targetRect.left + scrollX + targetRect.width / 2,
+        y: targetRect.top + scrollY,
+      },
+      {
+        x: targetRect.left + scrollX + targetRect.width / 2,
+        y: targetRect.bottom + scrollY,
+      },
+    ];
 
-    const dx = targetX - sourceX;
-    const dy = targetY - sourceY;
+    let minDistance = Infinity;
+    let closestSourceSide = sourceSides[0];
+    let closestTargetSide = targetSides[0];
+
+    sourceSides.forEach((sourceSide) => {
+      targetSides.forEach((targetSide) => {
+        const dx = targetSide.x - sourceSide.x;
+        const dy = targetSide.y - sourceSide.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestSourceSide = sourceSide;
+          closestTargetSide = targetSide;
+        }
+      });
+    });
+
+    const dx = closestTargetSide.x - closestSourceSide.x;
+    const dy = closestTargetSide.y - closestSourceSide.y;
     const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
     const length = Math.sqrt(dx * dx + dy * dy);
 
     this.line.style.width = `${length}px`;
-    this.line.style.left = `${sourceX}px`;
-    this.line.style.top = `${sourceY}px`;
+    this.line.style.left = `${closestSourceSide.x}px`;
+    this.line.style.top = `${closestSourceSide.y}px`;
     this.line.style.transform = `rotate(${angle}deg)`;
 
-    const arrowX = targetX - 10;
-    const arrowY = targetY - 5;
+    const arrowX = closestTargetSide.x - 10 * Math.cos((angle * Math.PI) / 180);
+    const arrowY = closestTargetSide.y - 10 * Math.sin((angle * Math.PI) / 180);
 
     this.arrow.style.left = `${arrowX}px`;
     this.arrow.style.top = `${arrowY}px`;
