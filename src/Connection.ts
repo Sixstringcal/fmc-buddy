@@ -11,25 +11,11 @@ export class Connection {
     this.line = document.createElement("div");
     this.line.classList.add("connection-line");
     this.line.id = `connection-${this.sourceId}-${this.targetId}`;
-    this.line.style.position = "absolute";
-    this.line.style.zIndex = "0";
-    this.line.style.pointerEvents = "none";
-    this.line.style.backgroundColor = "#4CAF50";
-    this.line.style.height = "2px";
-    this.line.style.transformOrigin = "0 0";
     document.body.appendChild(this.line);
 
     this.arrow = document.createElement("div");
     this.arrow.classList.add("connection-arrow");
     this.arrow.id = `arrow-${this.sourceId}-${this.targetId}`;
-    this.arrow.style.position = "absolute";
-    this.arrow.style.zIndex = "0";
-    this.arrow.style.pointerEvents = "none";
-    this.arrow.style.width = "0";
-    this.arrow.style.height = "0";
-    this.arrow.style.borderTop = "5px solid transparent";
-    this.arrow.style.borderBottom = "5px solid transparent";
-    this.arrow.style.borderLeft = "8px solid #4CAF50";
     document.body.appendChild(this.arrow);
 
     this.updatePosition();

@@ -625,3 +625,23 @@ body {
   right: 10px;
   z-index: 1000;
 }
+
+.connection-line {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  background-color: #4caf50;
+  height: 2px;
+  transform-origin: 0 0;
+}
+
+.connection-arrow {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 8px solid #4caf50;
+}
