@@ -76,12 +76,10 @@ function initializeApp() {
         }
 
         setTimeout(() => {
-            console.log("Initial connection restoration...");
             restoreConnections();
 
             for (let i = 1; i <= 5; i++) {
                 setTimeout(() => {
-                    console.log(`Forcing connection updates (attempt ${i})...`);
                     cubeViews.forEach(view => {
                         try {
                             view.forceUpdateConnections();
@@ -91,7 +89,6 @@ function initializeApp() {
                     });
                     
                     if (i === 5) {
-                        console.log("All connection init attempts completed");
                         CubeView.markConnectionsLoaded();
                         
                         setTimeout(() => {
@@ -154,19 +151,16 @@ async function loadSavedCubeViews(scrambleView: ScrambleView) {
 
 function restoreConnections() {
     const connections = loadState<{sourceId: string, targetId: string}[]>("cubeViewConnections", []);
-    console.log("Restoring connections:", connections);
     
     sessionStorage.setItem('connectionsBackup', JSON.stringify(connections));
     
     if (connections.length === 0) {
-        console.log("No connections to restore");
         CubeView.markConnectionsLoaded();
         return;
     }
     
     const allContainers = document.querySelectorAll('.cube-container');
     const containerIds = Array.from(allContainers).map(c => c.id);
-    console.log("Available containers:", containerIds);
     
     for (const connection of connections) {
         if (!containerIds.includes(connection.sourceId) || !containerIds.includes(connection.targetId)) {
@@ -176,7 +170,6 @@ function restoreConnections() {
         
         const sourceView = cubeViews.find(view => view.getContainerId() === connection.sourceId);
         if (sourceView) {
-            console.log(`Restoring connection: ${connection.sourceId} -> ${connection.targetId}`);
             sourceView.createConnectionFromState(connection.targetId);
         } else {
             console.warn(`Source view not found: ${connection.sourceId}`);

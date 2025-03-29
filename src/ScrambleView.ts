@@ -65,6 +65,9 @@ export class ScrambleView {
                 this.scrambleContainer.insertBefore(input, this.scrambleText);
                 this.scrambleText.textContent = "";
                 input.select();
+                input.addEventListener("input", () => {
+                    this.updateScramble(input.value);
+                });
                 input.addEventListener("keydown", (event) => {
                     if (event.key === "Enter") {
                         toggleEdit();

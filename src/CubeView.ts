@@ -375,6 +375,28 @@ export class CubeView {
       inputWrapper.appendChild(duplicateButton);
     }
 
+    const finishButtonId = `${this.containerId}-finish-button`;
+    let finishButton = document.getElementById(finishButtonId);
+    if (!finishButton) {
+      finishButton = document.createElement("button");
+      finishButton.id = finishButtonId;
+      finishButton.textContent = "✔";
+      finishButton.classList.add("finish-button");
+      finishButton.style.marginLeft = "10px";
+      finishButton.style.fontSize = "16px";
+      finishButton.style.padding = "2px 8px";
+      finishButton.style.borderRadius = "4px";
+      finishButton.style.background = "#007bff";
+      finishButton.style.color = "white";
+      finishButton.style.border = "none";
+      finishButton.style.cursor = "pointer";
+      finishButton.style.alignSelf = "flex-start";
+      finishButton.title = "Finish this cube view";
+
+      finishButton.addEventListener("click", () => this.finishCubeView());
+      inputWrapper.appendChild(finishButton);
+    }
+
     const ratingWrapperId = `${this.containerId}-rating-wrapper`;
     let ratingWrapper = document.getElementById(ratingWrapperId);
     if (!ratingWrapper) {
@@ -523,10 +545,6 @@ export class CubeView {
       });
     });
 
-    console.log(
-      `Saving connections for ${this.containerId}:`,
-      filteredConnections
-    );
     saveState("cubeViewConnections", filteredConnections);
     saveState("cubeViewIds", cubeViewIds);
     saveState("cubeViewCount", cubeViewIds.length);
@@ -537,13 +555,11 @@ export class CubeView {
       "cubeViewConnections",
       []
     );
-    console.log("Loaded connections:", connections);
 
     connections.forEach(({ sourceId, targetId }) => {
       if (sourceId === this.containerId) {
         const targetContainer = document.getElementById(targetId);
         if (targetContainer) {
-          console.log(`Creating connection from ${sourceId} to ${targetId}`);
           const connection = new Connection(sourceId, targetId);
           this.sourceConnections.push(connection);
 
@@ -1264,6 +1280,81 @@ export class CubeView {
     }, 200);
   }
 
+  private simplifyConsecutiveMoves(moves: string): string {
+    const moveList = moves.split(" ");
+    const simplifiedMoves: string[] = [];
+
+    for (let i = 0; i < moveList.length; i++) {
+      const currentMove = moveList[i];
+      const nextMove = moveList[i + 1];
+
+      if (!currentMove) continue;
+
+      if (currentMove === nextMove) {
+        if (currentMove.endsWith("2")) {
+          i++;
+        } else if (currentMove.endsWith("'")) {
+          simplifiedMoves.push(currentMove.replace("'", "2"));
+          i++;
+        } else {
+          simplifiedMoves.push(`${currentMove}2`);
+          i++;
+        }
+      } else {
+        simplifiedMoves.push(currentMove);
+      }
+    }
+
+    return simplifiedMoves.join(" ");
+  }
+
+  private finishCubeView() {
+    const simplifiedNormalMoves = this.simplifyConsecutiveMoves(
+      this.normalMoves
+    );
+    const simplifiedInverseMoves = this.simplifyConsecutiveMoves(
+      this.inverseMoves
+    );
+    const finishedMoves = `${simplifiedNormalMoves} ${this.invertMoves(
+      simplifiedInverseMoves
+    )}`.trim();
+
+    const newContainerId = `cube-container-${Date.now()}`;
+    const newCubeView = new CubeView(this.scramble, newContainerId);
+    newCubeView.initialize();
+
+    const originalContainer = document.getElementById(this.containerId);
+    const newContainer = document.getElementById(newContainerId);
+
+    if (originalContainer && newContainer) {
+      const newMoveInput = document.getElementById(
+        `${newContainerId}-move-input`
+      ) as HTMLTextAreaElement;
+      if (newMoveInput) {
+        newMoveInput.value = finishedMoves;
+
+        newCubeView.applyMoves(finishedMoves, true);
+
+        newCubeView.updateMoveCounter();
+      }
+
+      const originalRect = originalContainer.getBoundingClientRect();
+      newContainer.style.position = "absolute";
+      newContainer.style.top = `${originalRect.top}px`;
+      newContainer.style.left = `${originalRect.right + 50}px`;
+
+      this.createConnectionLine(originalContainer, newContainer);
+      this.ensureDocumentSize();
+    }
+
+    setTimeout(() => {
+      if (newCubeView) {
+        newCubeView.saveState();
+      }
+      this.saveState();
+    }, 200);
+  }
+
   private applyMovesToNewCubeView(
     cubeView: CubeView,
     content: string,
@@ -1326,9 +1417,6 @@ export class CubeView {
       );
 
       if (!exists) {
-        console.log(
-          `Creating connection from ${this.containerId} to ${targetId}`
-        );
         const connection = new Connection(this.containerId, targetId);
         connection.setVisible(true);
         this.sourceConnections.push(connection);
@@ -1346,9 +1434,6 @@ export class CubeView {
         connection.updatePosition();
         this.saveAppState();
       } else {
-        console.log(
-          `Connection from ${this.containerId} to ${targetId} already exists, skipping`
-        );
       }
     } else {
       console.warn(
@@ -1373,7 +1458,6 @@ export class CubeView {
       if (backupStr) {
         const backup = JSON.parse(backupStr);
         saveState("cubeViewConnections", backup);
-        console.log("Restored connections from backup");
       }
     }
 
@@ -1381,8 +1465,6 @@ export class CubeView {
   }
 
   public forceUpdateConnections() {
-    console.log(`Forcing update of connections for ${this.containerId}`);
-
     this.sourceConnections.forEach((connection) => {
       connection.updatePosition();
       connection.setVisible(true);
@@ -1412,9 +1494,6 @@ export class CubeView {
           );
 
           if (!exists) {
-            console.log(
-              `Initializing connection from ${sourceId} to ${targetId}`
-            );
             const connection = new Connection(sourceId, targetId);
             this.sourceConnections.push(connection);
 
@@ -1525,6 +1604,5 @@ export class CubeView {
 
   public static markConnectionsLoaded() {
     CubeView.connectionsLoaded = true;
-    console.log("Connections marked as loaded");
   }
 }
