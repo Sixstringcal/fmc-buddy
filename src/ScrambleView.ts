@@ -131,6 +131,11 @@ export class ScrambleView {
         });
 
         newScrambleButton.addEventListener("click", async () => {
+            const confirmReset = confirm("Are you sure you want to restart?");
+            if (!confirmReset) {
+                return;
+            }
+
             this.resetAllCubeViews();
 
             if (this.refreshScrambleCallback) {
