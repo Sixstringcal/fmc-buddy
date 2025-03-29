@@ -67,7 +67,7 @@ export class CubeView {
       this.isNormal = state.isNormal;
       this.isMinimized = state.isMinimized;
       this.secretRotation = state.secretRotation;
-      this.isGood = state.isGood || null;
+      this.isGood = state.isGood !== undefined ? state.isGood : null;
 
       if (state.textboxDimensions) {
         const moveInput = document.getElementById(
@@ -463,6 +463,8 @@ export class CubeView {
       }
       this.applyMoves(this.previousMoves, true);
     }
+
+    setTimeout(() => this.updateViewStatus(), 0);
   }
 
   private markAsGood() {
@@ -552,7 +554,7 @@ export class CubeView {
       null
     );
     if (state) {
-      this.isGood = state.isGood || null;
+      this.isGood = state.isGood !== undefined ? state.isGood : null;
       this.updateViewStatus();
 
       if (state.textboxDimensions) {
