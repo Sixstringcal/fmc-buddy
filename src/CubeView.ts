@@ -382,15 +382,6 @@ export class CubeView {
       duplicateButton.id = duplicateButtonId;
       duplicateButton.textContent = "+";
       duplicateButton.classList.add("duplicate-button");
-      duplicateButton.style.marginLeft = "10px";
-      duplicateButton.style.fontSize = "16px";
-      duplicateButton.style.padding = "2px 8px";
-      duplicateButton.style.borderRadius = "4px";
-      duplicateButton.style.background = "#4CAF50";
-      duplicateButton.style.color = "white";
-      duplicateButton.style.border = "none";
-      duplicateButton.style.cursor = "pointer";
-      duplicateButton.style.alignSelf = "flex-start";
       duplicateButton.title = "Duplicate this cube view";
 
       duplicateButton.addEventListener("click", () => this.duplicateCubeView());
@@ -404,15 +395,6 @@ export class CubeView {
       finishButton.id = finishButtonId;
       finishButton.textContent = "✔";
       finishButton.classList.add("finish-button");
-      finishButton.style.marginLeft = "10px";
-      finishButton.style.fontSize = "16px";
-      finishButton.style.padding = "2px 8px";
-      finishButton.style.borderRadius = "4px";
-      finishButton.style.background = "#007bff";
-      finishButton.style.color = "white";
-      finishButton.style.border = "none";
-      finishButton.style.cursor = "pointer";
-      finishButton.style.alignSelf = "flex-start";
       finishButton.title = "Finish this cube view";
 
       finishButton.addEventListener("click", () => this.finishCubeView());

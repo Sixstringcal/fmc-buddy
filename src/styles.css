@@ -645,3 +645,39 @@ body {
   border-bottom: 5px solid transparent;
   border-left: 8px solid #4caf50;
 }
+
+.finish-button {
+  margin-left: 10px;
+  font-size: 16px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.finish-button:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+}
+
+.duplicate-button {
+  margin-left: 10px;
+  font-size: 16px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.duplicate-button:hover {
+  background-color: #3d8b40;
+  transform: scale(1.05);
+}
