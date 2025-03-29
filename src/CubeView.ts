@@ -758,23 +758,33 @@ export class CubeView {
 
         const moveList = moves.split(" ");
         moveList.forEach((move) => {
-            if (move.startsWith("(") && move.endsWith(")")) {
-                this.inverseMoves += (this.inverseMoves ? " " : "") + move.slice(1, -1);
-            } else if (move.startsWith("(")) {
-                isInGroup = true;
-                groupBuffer = move.slice(1);
-            } else if (move.endsWith(")") && isInGroup) {
-                groupBuffer += " " + move.slice(0, -1);
-                this.inverseMoves += (this.inverseMoves ? " " : "") + groupBuffer.trim();
-                groupBuffer = "";
-                isInGroup = false;
-            } else if (isInGroup) {
-                groupBuffer += " " + move;
-            } else {
-                if (validMoveRegex.test(move)) {
-                    this.normalMoves += (this.normalMoves ? " " : "") + move;
+            let processedMove = move;
+            if (move.endsWith("2") && move.length > 1) {
+                const baseMove = move.slice(0, -1);
+                if (validMoveRegex.test(baseMove)) {
+                    processedMove = `${baseMove} ${baseMove}`;
                 }
             }
+            const movesToAdd = processedMove.split(" ");
+            movesToAdd.forEach(singleMove => {
+                if (singleMove.startsWith("(") && singleMove.endsWith(")")) {
+                    this.inverseMoves += (this.inverseMoves ? " " : "") + singleMove.slice(1, -1);
+                } else if (singleMove.startsWith("(")) {
+                    isInGroup = true;
+                    groupBuffer = singleMove.slice(1);
+                } else if (singleMove.endsWith(")") && isInGroup) {
+                    groupBuffer += " " + singleMove.slice(0, -1);
+                    this.inverseMoves += (this.inverseMoves ? " " : "") + groupBuffer.trim();
+                    groupBuffer = "";
+                    isInGroup = false;
+                } else if (isInGroup) {
+                    groupBuffer += " " + singleMove;
+                } else {
+                    if (validMoveRegex.test(singleMove)) {
+                        this.normalMoves += (this.normalMoves ? " " : "") + singleMove;
+                    }
+                }
+            });
         });
         if (isInGroup && groupBuffer) {
             this.inverseMoves += (this.inverseMoves ? " " : "") + groupBuffer.trim();
