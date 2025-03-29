@@ -60,6 +60,10 @@ function initializeApp() {
             alert("Time's up!");
         });
 
+        const timerElement = timer.getElement();
+        timerElement.classList.add("fixed-timer");
+        document.body.appendChild(timerElement);
+
         const addButton = document.createElement("button");
         addButton.textContent = "+";
         addButton.classList.add("add-button");

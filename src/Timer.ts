@@ -39,7 +39,9 @@ export class Timer {
             this.positionTimerBelowScramble();
         });
     }
-
+    public getElement(): HTMLElement {
+        return this.timerContainer;
+    }
     private async initialize() {
         this.timerButton.innerHTML = await this.loadSvg("/assets/play.svg");
         this.restartButton.innerHTML = await this.loadSvg("/assets/restart.svg");
