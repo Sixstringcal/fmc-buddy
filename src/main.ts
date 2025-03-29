@@ -9,58 +9,117 @@ let cubeViewCount = 0;
 const cubeViews: CubeView[] = [];
 let scrambleView: ScrambleView;
 
-(async () => {
-    const documentContainer = document.createElement('div');
-    documentContainer.id = 'document-container';
-    documentContainer.className = 'document-container';
-    document.body.appendChild(documentContainer);
-
-    scrambleView = new ScrambleView("");
-    scrambleView.initialize();
+function createLoadingOverlay() {
+    const overlay = document.createElement('div');
+    overlay.id = 'loading-overlay';
     
-    scrambleView.onRefreshScramble(refreshScramble);
+    const spinner = document.createElement('div');
+    spinner.classList.add('loading-spinner');
+    
+    const text = document.createElement('p');
+    text.textContent = 'Loading...';
+    
+    overlay.appendChild(spinner);
+    overlay.appendChild(text);
+    document.body.appendChild(overlay);
+    
+    return overlay;
+}
 
-    scramble = loadState("scramble", "");
-    if (scramble.trim() === "") {
-        scramble = (await randomScrambleForEvent("333fm")).toString();
-        saveState("scramble", scramble);
+function hideLoadingOverlay() {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) {
+        overlay.style.opacity = '0';
+        setTimeout(() => {
+            overlay.remove();
+        }, 101); 
     }
-    scrambleView.updateScramble(scramble);
+}
 
-    const timer = new Timer(60 * 60, () => {
-        alert("Time's up!");
-    });
+function initializeApp() {
+    (async () => {
+        const loadingOverlay = createLoadingOverlay();
 
-    const addButton = document.createElement("button");
-    addButton.textContent = "+";
-    addButton.classList.add("add-button");
-    addButton.addEventListener("click", () => {
-        createNewCubeView();
-    });
-    document.body.appendChild(addButton);
+        const documentContainer = document.createElement('div');
+        documentContainer.id = 'document-container';
+        documentContainer.className = 'document-container';
+        document.body.appendChild(documentContainer);
 
-    await loadSavedCubeViews(scrambleView);
+        scrambleView = new ScrambleView("");
+        scrambleView.initialize();
+        
+        scrambleView.onRefreshScramble(refreshScramble);
 
-    if (cubeViews.length === 0) {
-        createNewCubeView();
-    }
+        scramble = loadState("scramble", "");
+        if (scramble.trim() === "") {
+            scramble = (await randomScrambleForEvent("333fm")).toString();
+            saveState("scramble", scramble);
+        }
+        scrambleView.updateScramble(scramble);
 
-    setTimeout(() => {
-        restoreConnections();
-    }, 1000);
+        const timer = new Timer(60 * 60, () => {
+            alert("Time's up!");
+        });
 
-    setTimeout(() => {
-        updateDocumentBoundaries();
-    }, 500);
-    
-    window.addEventListener('resize', updateDocumentBoundaries);
-    window.addEventListener('scroll', updateDocumentBoundaries);
-    window.addEventListener('load', updateDocumentBoundaries);
-    
-    setInterval(() => {
-        saveState("scramble", scramble);
-    }, 5000);
-})();
+        const addButton = document.createElement("button");
+        addButton.textContent = "+";
+        addButton.classList.add("add-button");
+        addButton.addEventListener("click", () => {
+            createNewCubeView();
+        });
+        document.body.appendChild(addButton);
+
+        await loadSavedCubeViews(scrambleView);
+
+        if (cubeViews.length === 0) {
+            createNewCubeView();
+        }
+
+        setTimeout(() => {
+            console.log("Initial connection restoration...");
+            restoreConnections();
+
+            for (let i = 1; i <= 5; i++) {
+                setTimeout(() => {
+                    console.log(`Forcing connection updates (attempt ${i})...`);
+                    cubeViews.forEach(view => {
+                        try {
+                            view.forceUpdateConnections();
+                        } catch (e) {
+                            console.error(`Error updating connections for ${view.getContainerId()}:`, e);
+                        }
+                    });
+                    
+                    if (i === 5) {
+                        console.log("All connection init attempts completed");
+                        CubeView.markConnectionsLoaded();
+                        
+                        setTimeout(() => {
+                            cubeViews.forEach(view => view.forceUpdateConnections());
+                            hideLoadingOverlay();
+                        }, 100);
+                    }
+                }, i * 100); 
+            }
+        }, 100);
+
+        setTimeout(() => {
+            updateDocumentBoundaries();
+        }, 500);
+        
+        window.addEventListener('resize', updateDocumentBoundaries);
+        window.addEventListener('scroll', updateDocumentBoundaries);
+        window.addEventListener('load', updateDocumentBoundaries);
+        
+        setInterval(() => {
+            saveState("scramble", scramble);
+        }, 5000);
+    })();
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    initializeApp();
+});
 
 async function refreshScramble() {
     clearLocalStorage();
@@ -95,13 +154,38 @@ async function loadSavedCubeViews(scrambleView: ScrambleView) {
 
 function restoreConnections() {
     const connections = loadState<{sourceId: string, targetId: string}[]>("cubeViewConnections", []);
+    console.log("Restoring connections:", connections);
+    
+    sessionStorage.setItem('connectionsBackup', JSON.stringify(connections));
+    
+    if (connections.length === 0) {
+        console.log("No connections to restore");
+        CubeView.markConnectionsLoaded();
+        return;
+    }
+    
+    const allContainers = document.querySelectorAll('.cube-container');
+    const containerIds = Array.from(allContainers).map(c => c.id);
+    console.log("Available containers:", containerIds);
     
     for (const connection of connections) {
+        if (!containerIds.includes(connection.sourceId) || !containerIds.includes(connection.targetId)) {
+            console.warn(`Cannot restore connection: ${connection.sourceId} -> ${connection.targetId} (container not found)`);
+            continue;
+        }
+        
         const sourceView = cubeViews.find(view => view.getContainerId() === connection.sourceId);
         if (sourceView) {
+            console.log(`Restoring connection: ${connection.sourceId} -> ${connection.targetId}`);
             sourceView.createConnectionFromState(connection.targetId);
+        } else {
+            console.warn(`Source view not found: ${connection.sourceId}`);
         }
     }
+    
+    cubeViews.forEach(view => {
+        view.initializeConnections();
+    });
 }
 
 function createNewCubeView() {
