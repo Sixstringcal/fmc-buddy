@@ -925,6 +925,50 @@ export class CubeView {
       }
     });
 
+    moveInput.addEventListener("keydown", (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === "/") {
+        event.preventDefault();
+
+        const input = event.target as HTMLTextAreaElement;
+        const value = input.value;
+        const selectionStart = input.selectionStart;
+        const selectionEnd = input.selectionEnd;
+
+        const lines = value.split("\n");
+        const startLine =
+          value.substring(0, selectionStart).split("\n").length - 1;
+        const endLine = value.substring(0, selectionEnd).split("\n").length - 1;
+
+        const allLinesCommented = lines
+          .slice(startLine, endLine + 1)
+          .every((line) => line.trimStart().startsWith("//"));
+
+        for (let i = startLine; i <= endLine; i++) {
+          if (allLinesCommented) {
+            if (lines[i].trimStart().startsWith("//")) {
+              const trimStart = lines[i].length - lines[i].trimStart().length;
+              lines[i] =
+                lines[i].substring(0, trimStart) +
+                lines[i].substring(trimStart + 2);
+            }
+          } else {
+            lines[i] = "//" + lines[i];
+          }
+        }
+
+        const newValue = lines.join("\n");
+        input.value = newValue;
+
+        input.setSelectionRange(
+          selectionStart,
+          selectionEnd +
+            (allLinesCommented ? -2 : 2) * (endLine - startLine + 1)
+        );
+
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    });
+
     moveInput.addEventListener("addTargetConnection", (event: CustomEvent) => {
       const connection = event.detail.connection;
       if (connection) {
@@ -1004,7 +1048,7 @@ export class CubeView {
   private removeComments(moves): string {
     return moves
       .split("\n")
-      .map((line) => line.split("/")[0].trim())
+      .map((line) => line.split("//")[0].trim())
       .filter((line) => line.length > 0)
       .join(" ");
   }
