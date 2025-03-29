@@ -1491,12 +1491,6 @@ export class CubeView {
       });
     } catch (e) {
       console.error("Error updating connections:", e);
-
-      const backupStr = sessionStorage.getItem("connectionsBackup");
-      if (backupStr) {
-        const backup = JSON.parse(backupStr);
-        saveState("cubeViewConnections", backup);
-      }
     }
 
     this.saveAppState();
