@@ -53,7 +53,6 @@ function initializeApp() {
         scramble = loadState("scramble", "");
         if (scramble.trim() === "") {
             scramble = (await randomScrambleForEvent("333fm")).toString();
-            saveState("scramble", scramble);
         }
         scrambleView.updateScramble(scramble);
 
@@ -107,10 +106,6 @@ function initializeApp() {
         window.addEventListener('resize', updateDocumentBoundaries);
         window.addEventListener('scroll', updateDocumentBoundaries);
         window.addEventListener('load', updateDocumentBoundaries);
-        
-        setInterval(() => {
-            saveState("scramble", scramble);
-        }, 5000);
     })();
 }
 
@@ -122,7 +117,6 @@ async function refreshScramble() {
     clearLocalStorage();
     
     scramble = (await randomScrambleForEvent("333fm")).toString();
-    saveState("scramble", scramble);
     
     scrambleView.updateScramble(scramble);
     
