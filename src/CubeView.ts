@@ -712,6 +712,8 @@ export class CubeView {
                 }
             }
 
+            this.updateMoveCounter();
+
             const movesUpToCursor = input.value.substring(0, cursorPosition).trim();
             this.applyMoves(movesUpToCursor, false);
         });
@@ -921,43 +923,74 @@ export class CubeView {
                     this.twistyPlayer.experimentalAddMove(this.secretRotation);
                 }
             }
-            this.updateMoveCounter();
+
+            if (fromInverseButton) {
+                this.updateMoveCounter();
+            }
         }
     }
 
     private updateMoveCounter() {
         const moveCounter = document.getElementById(`${this.containerId}-move-counter`) as HTMLDivElement;
-        if (moveCounter) {
-            const countMoves = (moves: string): number => {
-                const moveList = moves.trim().split(/\s+/);
-                let count = 0;
-                let i = 0;
+        const moveInput = document.getElementById(`${this.containerId}-move-input`) as HTMLTextAreaElement;
 
-                while (i < moveList.length) {
-                    const currentMove = moveList[i];
-                    if (currentMove.endsWith("2")) {
-                        count++;
-                        i++;
-                    } else if (i + 1 < moveList.length && moveList[i] === moveList[i + 1]) {
-                        count++;
-                        i += 2;
-                    } else if (countableMoveRegex.test(currentMove)) {
-                        count++;
-                        i++;
-                    } else {
-                        i++;
-                    }
-                }
+        if (!moveCounter || !moveInput) return;
 
-                return count;
-            };
-
-            const normalMoveCount = countMoves(this.normalMoves);
-            const inverseMoveCount = countMoves(this.inverseMoves);
-            const totalMoves = normalMoveCount + inverseMoveCount;
-
-            moveCounter.textContent = `Moves: ${totalMoves}`;
+        const fullText = moveInput.value.trim();
+        if (!fullText) {
+            moveCounter.textContent = "Moves: 0";
+            return;
         }
+
+        const cleanedText = this.removeComments(fullText);
+        const moveCount = this.countAllMoves(cleanedText);
+        moveCounter.textContent = `Moves: ${moveCount}`;
+    }
+
+    private countAllMoves(movesText: string): number {
+        if (!movesText.trim()) return 0;
+
+        movesText = this.fixApostrophe(movesText);
+
+        let totalCount = 0;
+        let isInParentheses = false;
+        const moveTokens = movesText.split(/\s+/);
+
+        for (let i = 0; i < moveTokens.length; i++) {
+            let token = moveTokens[i];
+
+            if (!token) continue;
+
+            if (token.includes('(') && !token.includes(')')) {
+                isInParentheses = true;
+                token = token.replace('(', '');
+            }
+
+            if (token.includes(')') && !token.includes('(')) {
+                isInParentheses = false;
+                token = token.replace(')', '');
+            }
+
+            if (token.startsWith('(') && token.endsWith(')')) {
+                token = token.slice(1, -1);
+            }
+
+            if (countableMoveRegex.test(token)) {
+                totalCount++;
+            }
+
+            else if (token.endsWith('2') && countableMoveRegex.test(token.slice(0, -1))) {
+                totalCount++;
+            }
+
+            else if (i + 1 < moveTokens.length && token === moveTokens[i + 1] &&
+                countableMoveRegex.test(token)) {
+                totalCount++;
+                i++;
+            }
+        }
+
+        return totalCount;
     }
 
     private showToast(message: string) {
