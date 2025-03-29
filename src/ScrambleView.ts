@@ -161,6 +161,9 @@ export class ScrambleView {
 
         const links = document.querySelectorAll('.connection-line');
         links.forEach(link => link.remove());
+
+        const arrows = document.querySelectorAll('.connection-arrow');
+        arrows.forEach(arrow => arrow.remove());
     }
 
     updateScramble(newScramble: string) {
