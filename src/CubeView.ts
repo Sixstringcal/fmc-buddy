@@ -728,7 +728,7 @@ export class CubeView {
     const mouseDownHandler = (event: MouseEvent) => {
       if (
         (event.target as HTMLElement).id !==
-        `${this.containerId}-minimize-button`
+        `${this.containerId}-minimize-button` && this.isMinimized
       ) {
         container.classList.add("grabbing");
         container.style.zIndex = "100";
