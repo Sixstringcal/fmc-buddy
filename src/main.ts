@@ -97,11 +97,11 @@ function initializeApp() {
                         setTimeout(() => {
                             cubeViews.forEach(view => view.forceUpdateConnections());
                             hideLoadingOverlay();
-                        }, 100);
+                        }, 1);
                     }
-                }, i * 100); 
+                }, i * 1); 
             }
-        }, 100);
+        }, 1);
 
         setTimeout(() => {
             updateDocumentBoundaries();
