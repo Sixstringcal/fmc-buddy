@@ -177,6 +177,7 @@ export class CubeView {
 
           this.checkAndScroll(event.clientX, event.clientY);
           this.updateConnections();
+          Connection.updateConnectionsIntersectingCubeView(this.containerId);
           this.ensureDocumentSize();
           this.saveState();
 
@@ -190,6 +191,7 @@ export class CubeView {
           document.body.classList.remove("grabbing");
 
           this.updateConnections();
+          Connection.updateConnectionsIntersectingCubeView(this.containerId);
           this.ensureDocumentSize();
           this.saveState();
         }
@@ -223,6 +225,7 @@ export class CubeView {
 
           this.checkAndScroll(touch.clientX, touch.clientY);
           this.updateConnections();
+          Connection.updateConnectionsIntersectingCubeView(this.containerId);
           this.ensureDocumentSize();
 
           event.preventDefault();
@@ -233,6 +236,7 @@ export class CubeView {
         isDragging = false;
 
         this.updateConnections();
+        Connection.updateConnectionsIntersectingCubeView(this.containerId);
       });
 
       document.addEventListener("touchcancel", () => {
@@ -751,6 +755,7 @@ export class CubeView {
 
           this.checkAndScroll(moveEvent.clientX, moveEvent.clientY);
           this.updateConnections();
+          Connection.updateConnectionsIntersectingCubeView(this.containerId);
           this.ensureDocumentSize();
 
           moveEvent.preventDefault();
@@ -762,6 +767,7 @@ export class CubeView {
           document.removeEventListener("mouseup", mouseUpHandler);
 
           this.updateConnections();
+          Connection.updateConnectionsIntersectingCubeView(this.containerId);
           this.ensureDocumentSize();
         };
 
@@ -800,6 +806,7 @@ export class CubeView {
 
           this.checkAndScroll(touch.clientX, touch.clientY);
           this.updateConnections();
+          Connection.updateConnectionsIntersectingCubeView(this.containerId);
           this.ensureDocumentSize();
 
           moveEvent.preventDefault();
@@ -811,6 +818,7 @@ export class CubeView {
           document.removeEventListener("touchend", touchEndHandler);
 
           this.updateConnections();
+          Connection.updateConnectionsIntersectingCubeView(this.containerId);
           this.ensureDocumentSize();
         };
 
