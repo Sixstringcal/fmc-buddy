@@ -1,6 +1,7 @@
 import { TwistyPlayer } from "cubing/twisty";
 import { Connection } from "./Connection";
 import { saveState, loadState } from "./stateManager";
+import type { CubeSettings } from './SettingsModal';
 
 const validMoveRegex = /^(R|L|F|B|U|D|x|y|z|Rw|Lw|Fw|Bw|Uw|Dw)(2|'|w2|w')?$/;
 const countableMoveRegex = /^(R|L|F|B|U|D|Rw|Lw|Fw|Bw|Uw|Dw)(2|'|w2|w')?$/;
@@ -51,6 +52,8 @@ export class CubeView {
   private targetConnections: Connection[] = [];
 
   private static connectionsLoaded = false;
+
+  private highlightPhases: boolean = false;
 
   constructor(scramble: string, containerId: string, state?: CubeViewState) {
     this.scramble = scramble;
@@ -1680,5 +1683,42 @@ export class CubeView {
 
   public static markConnectionsLoaded() {
     CubeView.connectionsLoaded = true;
+  }
+
+  public applySettings(settings: CubeSettings): void {
+    const cubeElement = document.getElementById(this.containerId)?.querySelector('.cube-visualization');
+    if (cubeElement) {
+        const faces = ['U', 'F', 'R', 'L', 'D', 'B'];
+        faces.forEach(face => {
+            const faceElements = cubeElement.querySelectorAll(`.${face.toLowerCase()}-face`);
+            faceElements.forEach(el => {
+                (el as HTMLElement).style.backgroundColor = settings.colors[face as keyof typeof settings.colors];
+            });
+        });
+    }
+    
+    const cubeContainer = document.getElementById(this.containerId)?.querySelector('.cube-visualization-container');
+    if (cubeContainer) {
+        (cubeContainer as HTMLElement).style.transform = `scale(${settings.cubeScale})`;
+    }
+    
+    const textElements = document.getElementById(this.containerId)?.querySelectorAll('.move-notation, .move-description');
+    textElements?.forEach(el => {
+        (el as HTMLElement).style.fontSize = `${settings.textSize}px`;
+    });
+    
+    this.highlightPhases = settings.highlightPhases;
+    this.updateHighlighting();
+    
+    this.saveState();
+  }
+
+  private updateHighlighting(): void {
+    const cubeContainer = document.getElementById(this.containerId);
+    if (this.highlightPhases) {
+        cubeContainer?.classList.add('highlight-phases');
+    } else {
+        cubeContainer?.classList.remove('highlight-phases');
+    }
   }
 }

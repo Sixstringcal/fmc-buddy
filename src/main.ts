@@ -3,26 +3,29 @@ import { CubeView } from "./CubeView";
 import { Timer } from "./Timer";
 import { ScrambleView } from "./ScrambleView";
 import { loadState, saveState, clearLocalStorage } from "./stateManager";
+import { SettingsModal, defaultSettings } from "./SettingsModal";
+import type { CubeSettings } from "./SettingsModal";
 
 let scramble: string = "";
 let cubeViewCount = 0;
 const cubeViews: CubeView[] = [];
 let scrambleView: ScrambleView;
+let settingsModal: SettingsModal;
 
 function createLoadingOverlay() {
     const overlay = document.createElement('div');
     overlay.id = 'loading-overlay';
-    
+
     const spinner = document.createElement('div');
     spinner.classList.add('loading-spinner');
-    
+
     const text = document.createElement('p');
     text.textContent = 'Loading...';
-    
+
     overlay.appendChild(spinner);
     overlay.appendChild(text);
     document.body.appendChild(overlay);
-    
+
     return overlay;
 }
 
@@ -32,12 +35,48 @@ function hideLoadingOverlay() {
         overlay.style.opacity = '0';
         setTimeout(() => {
             overlay.remove();
-        }, 101); 
+        }, 101);
     }
 }
 
 function initializeApp() {
     (async () => {
+        const settingsButton = document.createElement("button");
+        settingsButton.textContent = "⚙️";
+        settingsButton.id = "settings-button";
+        settingsButton.classList.add("settings-button");
+        settingsButton.title = "Settings";
+        settingsButton.style.zIndex = "9999";
+        settingsButton.style.position = "fixed";
+        settingsButton.style.top = "80px";
+        settingsButton.style.left = "20px";
+        settingsButton.style.width = "60px";
+        settingsButton.style.height = "60px";
+        settingsButton.style.backgroundColor = "#FF5722";
+        settingsButton.style.color = "white";
+        settingsButton.style.border = "3px solid white";
+        settingsButton.style.borderRadius = "50%";
+        settingsButton.style.fontSize = "30px";
+        settingsButton.style.cursor = "pointer";
+        settingsButton.style.boxShadow = "0 0 10px rgba(0,0,0,0.5)";
+        settingsButton.style.display = "flex";
+        settingsButton.style.alignItems = "center";
+        settingsButton.style.justifyContent = "center";
+
+        settingsButton.setAttribute('style', settingsButton.getAttribute('style') + ' display: flex !important; visibility: visible !important;');
+
+        settingsButton.addEventListener("click", () => {
+            console.log("Settings button clicked");
+            if (settingsModal) {
+                settingsModal.show();
+            } else {
+                console.error("Settings modal not initialized");
+            }
+        });
+
+        document.body.appendChild(settingsButton);
+        console.log("Settings button created with ID:", settingsButton.id);
+
         const loadingOverlay = createLoadingOverlay();
 
         const documentContainer = document.createElement('div');
@@ -45,9 +84,15 @@ function initializeApp() {
         documentContainer.className = 'document-container';
         document.body.appendChild(documentContainer);
 
+        settingsModal = new SettingsModal((settings) => {
+            cubeViews.forEach(view => {
+                view.applySettings(settings);
+            });
+        });
+
         scrambleView = new ScrambleView("");
         scrambleView.initialize();
-        
+
         scrambleView.onRefreshScramble(refreshScramble);
 
         scramble = loadState("scramble", "");
@@ -90,26 +135,31 @@ function initializeApp() {
                             console.error(`Error updating connections for ${view.getContainerId()}:`, e);
                         }
                     });
-                    
+
                     if (i === 5) {
                         CubeView.markConnectionsLoaded();
-                        
+
                         setTimeout(() => {
                             cubeViews.forEach(view => view.forceUpdateConnections());
                             hideLoadingOverlay();
                         }, 100);
                     }
-                }, i * 100); 
+                }, i * 100);
             }
         }, 100);
 
         setTimeout(() => {
             updateDocumentBoundaries();
         }, 500);
-        
+
         window.addEventListener('resize', updateDocumentBoundaries);
         window.addEventListener('scroll', updateDocumentBoundaries);
         window.addEventListener('load', updateDocumentBoundaries);
+
+        const currentSettings = loadState<CubeSettings>("cubeSettings", defaultSettings);
+        cubeViews.forEach(view => {
+            view.applySettings(currentSettings);
+        });
     })();
 }
 
@@ -119,23 +169,23 @@ window.addEventListener('DOMContentLoaded', () => {
 
 async function refreshScramble() {
     clearLocalStorage();
-    
+
     scramble = (await randomScrambleForEvent("333fm")).toString();
-    
+
     scrambleView.updateScramble(scramble);
-    
+
     cubeViews.length = 0;
     cubeViewCount = 0;
-    
+
     createNewCubeView();
 }
 
 async function loadSavedCubeViews(scrambleView: ScrambleView) {
     const savedCount = loadState<number>("cubeViewCount", 0);
     const savedViewIds = loadState<string[]>("cubeViewIds", []);
-    
+
     cubeViewCount = Math.max(savedCount, 0);
-    
+
     for (const viewId of savedViewIds) {
         const viewState = loadState(`cubeView_${viewId}`, null);
         if (viewState) {
@@ -148,24 +198,24 @@ async function loadSavedCubeViews(scrambleView: ScrambleView) {
 }
 
 function restoreConnections() {
-    const connections = loadState<{sourceId: string, targetId: string}[]>("cubeViewConnections", []);
-    
+    const connections = loadState<{ sourceId: string, targetId: string }[]>("cubeViewConnections", []);
+
     sessionStorage.setItem('connectionsBackup', JSON.stringify(connections));
-    
+
     if (connections.length === 0) {
         CubeView.markConnectionsLoaded();
         return;
     }
-    
+
     const allContainers = document.querySelectorAll('.cube-container');
     const containerIds = Array.from(allContainers).map(c => c.id);
-    
+
     for (const connection of connections) {
         if (!containerIds.includes(connection.sourceId) || !containerIds.includes(connection.targetId)) {
             console.warn(`Cannot restore connection: ${connection.sourceId} -> ${connection.targetId} (container not found)`);
             continue;
         }
-        
+
         const sourceView = cubeViews.find(view => view.getContainerId() === connection.sourceId);
         if (sourceView) {
             sourceView.createConnectionFromState(connection.targetId);
@@ -173,7 +223,7 @@ function restoreConnections() {
             console.warn(`Source view not found: ${connection.sourceId}`);
         }
     }
-    
+
     cubeViews.forEach(view => {
         view.initializeConnections();
     });
@@ -185,7 +235,10 @@ function createNewCubeView() {
     const cubeView = new CubeView(scramble, containerId);
     cubeView.initialize();
     cubeViews.push(cubeView);
-    
+
+    const currentSettings = loadState<CubeSettings>("cubeSettings", defaultSettings);
+    cubeView.applySettings(currentSettings);
+
     setTimeout(() => {
         const newCubeContainer = document.getElementById(containerId);
         if (newCubeContainer) {
@@ -203,18 +256,18 @@ function updateDocumentBoundaries() {
     const containers = document.querySelectorAll('.cube-container');
     let maxRight = window.innerWidth;
     let maxBottom = window.innerHeight;
-    
+
     containers.forEach(container => {
         const el = container as HTMLElement;
         const rect = el.getBoundingClientRect();
-        
+
         const right = rect.right + window.scrollX + 300;
         const bottom = rect.bottom + window.scrollY + 300;
-        
+
         maxRight = Math.max(maxRight, right);
         maxBottom = Math.max(maxBottom, bottom);
     });
-    
+
     document.documentElement.style.minWidth = `${maxRight}px`;
     document.documentElement.style.minHeight = `${maxBottom}px`;
     document.body.style.minWidth = `${maxRight}px`;
