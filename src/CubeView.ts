@@ -451,7 +451,7 @@ export class CubeView {
 
     this.updateMinimizedState();
 
-    setTimeout(() => this.updateViewStatus(), 0);
+    this.updateViewStatus();
   }
 
   private markAsGood() {
@@ -1362,12 +1362,10 @@ export class CubeView {
       this.ensureDocumentSize();
     }
 
-    setTimeout(() => {
-      if (newCubeView) {
-        newCubeView.saveState();
-      }
-      this.saveState();
-    }, 200);
+    if (newCubeView) {
+      newCubeView.saveState();
+    }
+    this.saveState();
   }
 
   private simplifyConsecutiveMoves(moves: string): string {
@@ -1437,12 +1435,10 @@ export class CubeView {
       this.ensureDocumentSize();
     }
 
-    setTimeout(() => {
-      if (newCubeView) {
-        newCubeView.saveState();
-      }
-      this.saveState();
-    }, 200);
+    if (newCubeView) {
+      newCubeView.saveState();
+    }
+    this.saveState();
   }
 
   private applyMovesToNewCubeView(
@@ -1477,15 +1473,13 @@ export class CubeView {
       const element = targetCubeViewElements[i] as HTMLElement;
       if (element.id === toContainer.id) {
         const targetId = element.id;
-        setTimeout(() => {
-          const moveInput = document.getElementById(`${targetId}-move-input`);
-          if (moveInput) {
-            const event = new CustomEvent("addTargetConnection", {
-              detail: { connection: connection },
-            });
-            moveInput.dispatchEvent(event);
-          }
-        }, 100);
+        const moveInput = document.getElementById(`${targetId}-move-input`);
+        if (moveInput) {
+          const event = new CustomEvent("addTargetConnection", {
+            detail: { connection: connection },
+          });
+          moveInput.dispatchEvent(event);
+        }
         break;
       }
     }

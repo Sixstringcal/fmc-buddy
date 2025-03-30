@@ -78,30 +78,19 @@ function initializeApp() {
             createNewCubeView();
         }
 
-        setTimeout(() => {
-            restoreConnections();
-
-            for (let i = 1; i <= 5; i++) {
-                setTimeout(() => {
-                    cubeViews.forEach(view => {
-                        try {
-                            view.forceUpdateConnections();
-                        } catch (e) {
-                            console.error(`Error updating connections for ${view.getContainerId()}:`, e);
-                        }
-                    });
-                    
-                    if (i === 5) {
-                        CubeView.markConnectionsLoaded();
-                        
-                        setTimeout(() => {
-                            cubeViews.forEach(view => view.forceUpdateConnections());
-                            hideLoadingOverlay();
-                        }, 1);
-                    }
-                }, i * 1); 
+        restoreConnections();
+        
+        cubeViews.forEach(view => {
+            try {
+                view.forceUpdateConnections();
+            } catch (e) {
+                console.error(`Error updating connections for ${view.getContainerId()}:`, e);
             }
-        }, 1);
+        });
+        
+        CubeView.markConnectionsLoaded();
+        cubeViews.forEach(view => view.forceUpdateConnections());
+        hideLoadingOverlay();
 
         setTimeout(() => {
             updateDocumentBoundaries();
