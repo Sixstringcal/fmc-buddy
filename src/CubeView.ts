@@ -451,6 +451,38 @@ export class CubeView {
     this.updateMinimizedState();
 
     this.updateViewStatus();
+    
+    cubeContainer.addEventListener("click", (e) => {
+      const target = e.target as HTMLElement;
+      
+      if (
+        target.tagName === "BUTTON" || 
+        target.tagName === "TEXTAREA" ||
+        target.id === `${this.containerId}-drag-icon` ||
+        target.closest(".twisty-player-component") ||
+        target.classList.contains("rating-button") ||
+        target.classList.contains("text-preview")
+      ) {
+        return;
+      }
+      
+      const moveInput = document.getElementById(
+        `${this.containerId}-move-input`
+      ) as HTMLTextAreaElement;
+      
+      if (moveInput && !this.isMinimized) {
+        moveInput.focus();
+        
+        if (document.activeElement === moveInput) {
+          const currentStart = moveInput.selectionStart;
+          const currentEnd = moveInput.selectionEnd;
+          setTimeout(() => {
+            moveInput.selectionStart = currentStart;
+            moveInput.selectionEnd = currentEnd;
+          }, 0);
+        }
+      }
+    });
   }
 
   private markAsGood() {
