@@ -177,7 +177,6 @@ export class CubeView {
 
           this.checkAndScroll(event.clientX, event.clientY);
           this.updateConnections();
-          Connection.updateConnectionsIntersectingCubeView(this.containerId);
           this.ensureDocumentSize();
           this.saveState();
 
