@@ -9,6 +9,17 @@ let cubeViewCount = 0;
 const cubeViews: CubeView[] = [];
 let scrambleView: ScrambleView;
 
+function throttle(func: Function, delay: number): (...args: any[]) => void {
+    let lastCall = 0;
+    return function(...args: any[]) {
+        const now = Date.now();
+        if (now - lastCall >= delay) {
+            lastCall = now;
+            func(...args);
+        }
+    };
+}
+
 function createLoadingOverlay() {
     const overlay = document.createElement('div');
     overlay.id = 'loading-overlay';
@@ -80,6 +91,7 @@ function initializeApp() {
 
         restoreConnections();
         
+        CubeView.markConnectionsLoaded();
         cubeViews.forEach(view => {
             try {
                 view.forceUpdateConnections();
@@ -88,16 +100,13 @@ function initializeApp() {
             }
         });
         
-        CubeView.markConnectionsLoaded();
-        cubeViews.forEach(view => view.forceUpdateConnections());
         hideLoadingOverlay();
 
-        setTimeout(() => {
-            updateDocumentBoundaries();
-        }, 500);
+        updateDocumentBoundaries();
         
-        window.addEventListener('resize', updateDocumentBoundaries);
-        window.addEventListener('scroll', updateDocumentBoundaries);
+        const throttledUpdateBoundaries = throttle(updateDocumentBoundaries, 100);
+        window.addEventListener('resize', throttledUpdateBoundaries);
+        window.addEventListener('scroll', throttledUpdateBoundaries);
         window.addEventListener('load', updateDocumentBoundaries);
     })();
 }
@@ -175,7 +184,7 @@ function createNewCubeView() {
     cubeView.initialize();
     cubeViews.push(cubeView);
     
-    setTimeout(() => {
+    requestAnimationFrame(() => {
         const newCubeContainer = document.getElementById(containerId);
         if (newCubeContainer) {
             if (!newCubeContainer.style.left || !newCubeContainer.style.top) {
@@ -185,7 +194,7 @@ function createNewCubeView() {
             updateDocumentBoundaries();
             cubeView.saveState();
         }
-    }, 100);
+    });
 }
 
 function updateDocumentBoundaries() {

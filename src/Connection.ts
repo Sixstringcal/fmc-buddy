@@ -6,6 +6,11 @@ export class Connection {
   private currentPath: { x: number; y: number; edge?: string }[] = [];
   
   private static allConnections: Connection[] = [];
+  
+  private cachedObstacles: DOMRect[] | null = null;
+  private lastUpdateTime: number = 0;
+  private static lastObstacleUpdateTime: number = 0;
+  private static cachedObstacles: DOMRect[] | null = null;
 
   constructor(sourceId: string, targetId: string) {
     this.sourceId = sourceId;
@@ -35,14 +40,16 @@ export class Connection {
       cubeViewRect.height
     );
 
-    Connection.allConnections.forEach(connection => {
-      if (connection.sourceId === cubeViewId || connection.targetId === cubeViewId) {
-        return;
-      }
-      
-      if (connection.intersectsCubeView(absoluteRect)) {
-        connection.updatePosition();
-      }
+    requestAnimationFrame(() => {
+      Connection.allConnections.forEach(connection => {
+        if (connection.sourceId === cubeViewId || connection.targetId === cubeViewId) {
+          return;
+        }
+        
+        if (connection.intersectsCubeView(absoluteRect)) {
+          connection.updatePosition();
+        }
+      });
     });
   }
   
@@ -62,6 +69,12 @@ export class Connection {
   }
 
   public updatePosition() {
+    const now = performance.now();
+    if (now - this.lastUpdateTime < 16) {
+      return;
+    }
+    this.lastUpdateTime = now;
+
     const sourceContainer = document.getElementById(this.sourceId);
     const targetContainer = document.getElementById(this.targetId);
 
@@ -156,6 +169,11 @@ export class Connection {
   }
 
   private getObstacles() {
+    const now = performance.now();
+    if (Connection.cachedObstacles && now - Connection.lastObstacleUpdateTime < 100) {
+      return Connection.cachedObstacles;
+    }
+
     const obstacles: DOMRect[] = [];
     const containers = document.querySelectorAll('.cube-container');
 
@@ -175,6 +193,9 @@ export class Connection {
       }
     });
 
+    Connection.cachedObstacles = obstacles;
+    Connection.lastObstacleUpdateTime = now;
+
     return obstacles;
   }
 
@@ -189,8 +210,6 @@ export class Connection {
       return [start, end];
     }
 
-    const candidatePaths = [];
-
     const lPath1 = [
       start,
       { x: end.x, y: start.y, edge: 'corner' },
@@ -204,12 +223,14 @@ export class Connection {
     ];
 
     if (!this.pathHasObstacles(lPath1, obstacles)) {
-      candidatePaths.push(lPath1);
+      return lPath1;
     }
 
     if (!this.pathHasObstacles(lPath2, obstacles)) {
-      candidatePaths.push(lPath2);
+      return lPath2;
     }
+
+    const candidatePaths = [];
 
     const midX = (start.x + end.x) / 2;
     const midY = (start.y + end.y) / 2;

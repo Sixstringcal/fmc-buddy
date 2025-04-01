@@ -143,27 +143,7 @@ export class CubeView {
       let offsetX = 0;
       let offsetY = 0;
 
-      dragIcon.addEventListener("mousedown", (event) => {
-        if (!CubeView.connectionsLoaded) {
-          console.warn("Connections still loading, drag operation prevented");
-          return;
-        }
-
-        isDragging = true;
-        startDragging(event);
-        event.preventDefault();
-      });
-
-      const startDragging = (event: MouseEvent) => {
-        offsetX = event.clientX - cubeContainer.getBoundingClientRect().left;
-        offsetY = event.clientY - cubeContainer.getBoundingClientRect().top;
-        document.body.classList.add("grabbing");
-        cubeContainer.style.zIndex = "100";
-
-        this.snapshotConnections();
-      };
-
-      document.addEventListener("mousemove", (event) => {
+      const mouseMoveHandler = (event: MouseEvent) => {
         if (isDragging) {
           const scrollX =
             window.pageXOffset || document.documentElement.scrollLeft;
@@ -178,13 +158,12 @@ export class CubeView {
           this.checkAndScroll(event.clientX, event.clientY);
           this.updateConnections();
           this.ensureDocumentSize();
-          this.saveState();
 
           event.preventDefault();
         }
-      });
+      };
 
-      document.addEventListener("mouseup", () => {
+      const mouseUpHandler = () => {
         if (isDragging) {
           isDragging = false;
           document.body.classList.remove("grabbing");
@@ -193,7 +172,34 @@ export class CubeView {
           Connection.updateConnectionsIntersectingCubeView(this.containerId);
           this.ensureDocumentSize();
           this.saveState();
+
+          document.removeEventListener("mousemove", mouseMoveHandler);
+          document.removeEventListener("mouseup", mouseUpHandler);
         }
+      };
+
+      const startDragging = (event: MouseEvent) => {
+        offsetX = event.clientX - cubeContainer.getBoundingClientRect().left;
+        offsetY = event.clientY - cubeContainer.getBoundingClientRect().top;
+        document.body.classList.add("grabbing");
+        cubeContainer.style.zIndex = "100";
+
+        this.snapshotConnections();
+      };
+
+      dragIcon.addEventListener("mousedown", (event) => {
+        if (!CubeView.connectionsLoaded) {
+          console.warn("Connections still loading, drag operation prevented");
+          return;
+        }
+
+        isDragging = true;
+        startDragging(event);
+
+        document.addEventListener("mousemove", mouseMoveHandler);
+        document.addEventListener("mouseup", mouseUpHandler);
+
+        event.preventDefault();
       });
 
       dragIcon.addEventListener("touchstart", (event) => {
