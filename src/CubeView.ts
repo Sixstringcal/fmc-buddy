@@ -451,12 +451,12 @@ export class CubeView {
     this.updateMinimizedState();
 
     this.updateViewStatus();
-    
+
     cubeContainer.addEventListener("click", (e) => {
       const target = e.target as HTMLElement;
-      
+
       if (
-        target.tagName === "BUTTON" || 
+        target.tagName === "BUTTON" ||
         target.tagName === "TEXTAREA" ||
         target.id === `${this.containerId}-drag-icon` ||
         target.closest(".twisty-player-component") ||
@@ -465,14 +465,14 @@ export class CubeView {
       ) {
         return;
       }
-      
+
       const moveInput = document.getElementById(
         `${this.containerId}-move-input`
       ) as HTMLTextAreaElement;
-      
+
       if (moveInput && !this.isMinimized) {
         moveInput.focus();
-        
+
         if (document.activeElement === moveInput) {
           const currentStart = moveInput.selectionStart;
           const currentEnd = moveInput.selectionEnd;
@@ -1384,10 +1384,10 @@ export class CubeView {
         );
       }
 
-      const originalRect = originalContainer.getBoundingClientRect();
+      const position = this.findNonOverlappingPosition(originalContainer);
       newContainer.style.position = "absolute";
-      newContainer.style.top = `${originalRect.top}px`;
-      newContainer.style.left = `${originalRect.right + 50}px`;
+      newContainer.style.top = `${position.top}px`;
+      newContainer.style.left = `${position.left}px`;
 
       this.createConnectionLine(originalContainer, newContainer);
       this.ensureDocumentSize();
@@ -1457,10 +1457,10 @@ export class CubeView {
         newCubeView.updateMoveCounter();
       }
 
-      const originalRect = originalContainer.getBoundingClientRect();
+      const position = this.findNonOverlappingPosition(originalContainer);
       newContainer.style.position = "absolute";
-      newContainer.style.top = `${originalRect.top}px`;
-      newContainer.style.left = `${originalRect.right + 50}px`;
+      newContainer.style.top = `${position.top}px`;
+      newContainer.style.left = `${position.left}px`;
 
       this.createConnectionLine(originalContainer, newContainer);
       this.ensureDocumentSize();
@@ -1709,6 +1709,135 @@ export class CubeView {
       "connectionsBackup",
       JSON.stringify(connectionsBackup)
     );
+  }
+
+  private findNonOverlappingPosition(originalContainer: HTMLElement) {
+    const rect = originalContainer.getBoundingClientRect();
+    const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+
+    const containerWidth = rect.width;
+    const containerHeight = rect.height;
+
+    const allContainers = Array.from(
+      document.querySelectorAll(".cube-container")
+    ) as HTMLElement[];
+
+    const spacing = 20;
+    const rightwardAttempts = 5;
+
+    const minLeft = Math.max(0, scrollX);
+    const minTop = Math.max(0, scrollY);
+
+    for (let attempt = 1; attempt <= rightwardAttempts; attempt++) {
+      const rightPosition = {
+        left: Math.max(minLeft, rect.right + scrollX + spacing * attempt),
+        top: Math.max(minTop, rect.top + scrollY),
+      };
+
+      if (
+        !this.isOverlapping(
+          rightPosition,
+          containerWidth,
+          containerHeight,
+          allContainers,
+          originalContainer
+        )
+      ) {
+        return rightPosition;
+      }
+    }
+
+    const directions = [
+      { dx: 1, dy: 0 },
+      { dx: 0, dy: 1 },
+      { dx: 1, dy: 1 },
+      { dx: -1, dy: 0 },
+      { dx: 0, dy: -1 },
+      { dx: 1, dy: -1 },
+    ];
+
+    let maxAttempts = 20;
+    let x = 0,
+      y = 0;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      for (const direction of directions) {
+        const stepsToTry = direction.dx > 0 ? 3 : 1;
+
+        for (let step = 1; step <= stepsToTry; step++) {
+          x += direction.dx;
+          y += direction.dy;
+
+          let potentialLeft =
+            rect.left + scrollX + x * (containerWidth + spacing);
+          let potentialTop =
+            rect.top + scrollY + y * (containerHeight + spacing / 2);
+
+          potentialLeft = Math.max(minLeft, potentialLeft);
+          potentialTop = Math.max(minTop, potentialTop);
+
+          const position = {
+            left: potentialLeft,
+            top: potentialTop,
+          };
+
+          if (
+            !this.isOverlapping(
+              position,
+              containerWidth,
+              containerHeight,
+              allContainers,
+              originalContainer
+            )
+          ) {
+            return position;
+          }
+        }
+      }
+    }
+
+    return {
+      left: Math.max(minLeft, rect.right + scrollX + spacing * 2),
+      top: Math.max(minTop, rect.bottom + scrollY + spacing),
+    };
+  }
+
+  private isOverlapping(
+    position: { left: number; top: number },
+    width: number,
+    height: number,
+    containers: HTMLElement[],
+    excludeContainer: HTMLElement
+  ): boolean {
+    const proposedRect = {
+      left: position.left,
+      right: position.left + width,
+      top: position.top,
+      bottom: position.top + height,
+    };
+
+    return containers.some((container) => {
+      if (container === excludeContainer) return false;
+
+      const rect = container.getBoundingClientRect();
+      const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+      const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+
+      const containerRect = {
+        left: rect.left + scrollX,
+        right: rect.right + scrollX,
+        top: rect.top + scrollY,
+        bottom: rect.bottom + scrollY,
+      };
+
+      return !(
+        proposedRect.right < containerRect.left ||
+        proposedRect.left > containerRect.right ||
+        proposedRect.bottom < containerRect.top ||
+        proposedRect.top > containerRect.bottom
+      );
+    });
   }
 
   public static markConnectionsLoaded() {
