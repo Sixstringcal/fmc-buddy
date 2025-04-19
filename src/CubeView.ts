@@ -23,6 +23,9 @@ interface CubeViewState {
     width: number;
     height: number;
   };
+  isEOView?: boolean;
+  eoList?: string[];
+  selectedEOIndex?: number;
 }
 
 interface AppState {
@@ -46,6 +49,9 @@ export class CubeView {
   private isMinimized: boolean = false;
   private secretRotation: string = "";
   private isGood: boolean | null = null;
+  private isEOView: boolean = false;
+  private eoList: string[] = [];
+  private selectedEOIndex: number = 0;
 
   private sourceConnections: Connection[] = [];
   private targetConnections: Connection[] = [];
@@ -68,6 +74,9 @@ export class CubeView {
       this.isMinimized = state.isMinimized;
       this.secretRotation = state.secretRotation;
       this.isGood = state.isGood !== undefined ? state.isGood : null;
+      this.isEOView = !!state.isEOView;
+      this.eoList = state.eoList || [];
+      this.selectedEOIndex = state.selectedEOIndex ?? 0;
 
       if (state.textboxDimensions) {
         const moveInput = document.getElementById(
@@ -435,6 +444,57 @@ export class CubeView {
       ratingWrapper.appendChild(thumbsDownButton);
     }
 
+    const eoSwitchId = `${this.containerId}-eo-switch`;
+    let eoSwitch = document.getElementById(eoSwitchId) as HTMLLabelElement;
+    if (!eoSwitch) {
+      const eoSwitchWrapper = document.createElement("div");
+      eoSwitchWrapper.style.display = "flex";
+      eoSwitchWrapper.style.alignItems = "center";
+      eoSwitchWrapper.style.marginRight = "8px";
+      eoSwitchWrapper.style.height = "32px";
+
+      const eoSwitchLabel = document.createElement("span");
+      eoSwitchLabel.textContent = "EO";
+      eoSwitchLabel.className = "eo-switch-label";
+      eoSwitchLabel.style.marginRight = "6px";
+      eoSwitchLabel.style.fontWeight = "bold";
+      eoSwitchLabel.style.fontSize = "1rem";
+      eoSwitchWrapper.appendChild(eoSwitchLabel);
+
+      eoSwitch = document.createElement("label");
+      eoSwitch.id = eoSwitchId;
+      eoSwitch.className = "eo-switch-outer";
+      eoSwitch.innerHTML = `
+        <input type="checkbox" class="eo-switch-checkbox" style="display:none;" ${this.isEOView ? "checked" : ""}>
+        <span class="eo-switch-slider"></span>
+      `;
+      eoSwitch.title = "Toggle EO View";
+      eoSwitch.querySelector("input")!.addEventListener("change", () => this.toggleEOView());
+      eoSwitchWrapper.appendChild(eoSwitch);
+
+      inputWrapper.insertBefore(eoSwitchWrapper, inputWrapper.firstChild);
+    } else {
+      (eoSwitch.querySelector("input") as HTMLInputElement).checked = this.isEOView;
+    }
+
+    const eoListWrapperId = `${this.containerId}-eo-list-wrapper`;
+    let eoListWrapper = document.getElementById(eoListWrapperId) as HTMLDivElement;
+    if (!eoListWrapper) {
+      eoListWrapper = document.createElement("div");
+      eoListWrapper.id = eoListWrapperId;
+      eoListWrapper.className = "eo-list-wrapper";
+      eoListWrapper.style.display = "none";
+      inputWrapper.insertBefore(eoListWrapper, duplicateButton);
+    }
+
+    if (state && state.textboxDimensions) {
+      eoListWrapper.style.width = `${state.textboxDimensions.width}px`;
+      eoListWrapper.style.height = `${state.textboxDimensions.height}px`;
+    }
+
+    eoListWrapper.addEventListener("mouseup", () => this.saveEOListDimensions());
+    eoListWrapper.addEventListener("touchend", () => this.saveEOListDimensions());
+
     cubeContainer.insertBefore(this.twistyPlayer, columnWrapper);
 
     const splitScramble = this.scramble.split(" ");
@@ -457,6 +517,10 @@ export class CubeView {
     this.updateMinimizedState();
 
     this.updateViewStatus();
+
+    this.renderEOList();
+
+    this.updateEOViewUI();
 
     cubeContainer.addEventListener("click", (e) => {
       const target = e.target as HTMLElement;
@@ -543,10 +607,27 @@ export class CubeView {
     const moveInput = document.getElementById(
       `${this.containerId}-move-input`
     ) as HTMLTextAreaElement;
+    const eoListWrapper = document.getElementById(
+      `${this.containerId}-eo-list-wrapper`
+    ) as HTMLDivElement;
 
     const rect = cubeContainer.getBoundingClientRect();
     const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
-    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+    const scrollY =
+      window.pageYOffset || document.documentElement.scrollTop;
+
+    let textboxDimensions;
+    if (this.isEOView && eoListWrapper) {
+      textboxDimensions = {
+        width: eoListWrapper.offsetWidth,
+        height: eoListWrapper.offsetHeight,
+      };
+    } else if (moveInput) {
+      textboxDimensions = {
+        width: moveInput.offsetWidth,
+        height: moveInput.offsetHeight,
+      };
+    }
 
     const state: CubeViewState = {
       id: this.containerId,
@@ -559,12 +640,10 @@ export class CubeView {
       isNormal: this.isNormal,
       secretRotation: this.secretRotation,
       isGood: this.isGood,
-      textboxDimensions: moveInput
-        ? {
-            width: moveInput.offsetWidth,
-            height: moveInput.offsetHeight,
-          }
-        : undefined,
+      textboxDimensions,
+      isEOView: this.isEOView,
+      eoList: this.eoList,
+      selectedEOIndex: this.selectedEOIndex,
     };
 
     saveState(`cubeView_${this.containerId}`, state);
@@ -580,6 +659,9 @@ export class CubeView {
     if (state) {
       this.isGood = state.isGood !== undefined ? state.isGood : null;
       this.updateViewStatus();
+      this.isEOView = !!state.isEOView;
+      this.eoList = state.eoList || [];
+      this.selectedEOIndex = state.selectedEOIndex ?? 0;
 
       if (state.textboxDimensions) {
         const moveInput = document.getElementById(
@@ -1352,6 +1434,32 @@ export class CubeView {
   }
 
   private duplicateCubeView() {
+    if (this.isEOView) {
+      const eo = this.eoList[this.selectedEOIndex] || "";
+      const newContainerId = `cube-container-${Date.now()}`;
+      const newCubeView = new CubeView(this.scramble, newContainerId);
+      newCubeView.initialize();
+      const newMoveInput = document.getElementById(
+        `${newContainerId}-move-input`
+      ) as HTMLTextAreaElement;
+      if (newMoveInput) {
+        newMoveInput.value = eo;
+        newCubeView.applyMoves(eo, true);
+      }
+      const originalContainer = document.getElementById(this.containerId);
+      const newContainer = document.getElementById(newContainerId);
+      if (originalContainer && newContainer) {
+        const position = this.findNonOverlappingPosition(originalContainer);
+        newContainer.style.position = "absolute";
+        newContainer.style.top = `${position.top}px`;
+        newContainer.style.left = `${position.left}px`;
+        this.createConnectionLine(originalContainer, newContainer);
+        this.ensureDocumentSize();
+      }
+      newCubeView.saveState();
+      this.saveState();
+      return;
+    }
     const moveInput = document.getElementById(
       `${this.containerId}-move-input`
     ) as HTMLTextAreaElement;
@@ -1848,5 +1956,143 @@ export class CubeView {
 
   public static markConnectionsLoaded() {
     CubeView.connectionsLoaded = true;
+  }
+
+  private toggleEOView() {
+    this.isEOView = !this.isEOView;
+    this.updateEOViewUI();
+    this.saveState();
+  }
+
+  private updateEOViewUI() {
+    const moveInput = document.getElementById(`${this.containerId}-move-input`);
+    const eoListWrapper = document.getElementById(`${this.containerId}-eo-list-wrapper`);
+    const eoSwitch = document.getElementById(`${this.containerId}-eo-switch`);
+    const moveCounter = document.getElementById(`${this.containerId}-move-counter`);
+    if (this.isEOView) {
+      if (moveInput) moveInput.style.display = "none";
+      if (eoListWrapper) eoListWrapper.style.display = "";
+      if (eoSwitch) (eoSwitch.querySelector("input") as HTMLInputElement).checked = true;
+      if (moveCounter) moveCounter.style.display = "none";
+    } else {
+      if (moveInput) moveInput.style.display = "";
+      if (eoListWrapper) eoListWrapper.style.display = "none";
+      if (eoSwitch) (eoSwitch.querySelector("input") as HTMLInputElement).checked = false;
+      if (moveCounter) moveCounter.style.display = "";
+    }
+    this.renderEOList();
+    if (this.isEOView && this.eoList.length > 0) {
+      this.applyMoves(this.eoList[this.selectedEOIndex] || "", true);
+    }
+  }
+
+  private renderEOList() {
+    const eoListWrapper = document.getElementById(`${this.containerId}-eo-list-wrapper`) as HTMLDivElement;
+    if (!eoListWrapper) return;
+    eoListWrapper.innerHTML = "";
+    if (!this.isEOView) return;
+
+    const moveCounter = document.getElementById(`${this.containerId}-move-counter`);
+    if (moveCounter) moveCounter.style.display = "none";
+
+    if (this.eoList.length === 0) {
+      this.eoList = [""];
+      this.selectedEOIndex = 0;
+    }
+
+    const eoWithIndex = this.eoList.map((eo, idx) => ({
+      eo,
+      idx,
+      count: this.countAllMoves(eo)
+    }));
+    eoWithIndex.sort((a, b) => {
+      if (b.count !== a.count) return a.count - b.count;
+      return a.idx - b.idx;
+    });
+
+    const selectedEO = this.eoList[this.selectedEOIndex];
+    this.eoList = eoWithIndex.map(e => e.eo);
+    this.selectedEOIndex = this.eoList.findIndex(eo => eo === selectedEO);
+
+    this.eoList.forEach((eo, idx) => {
+      const row = document.createElement("div");
+      row.classList.add("eo-row");
+      row.style.background = idx === this.selectedEOIndex ? "#e0e0e0" : "";
+      row.textContent = eo || "(Double click to edit)";
+      row.title = eo;
+
+      let clickTimeout: number | null = null;
+      row.addEventListener("click", (e) => {
+        if (clickTimeout !== null) {
+          clearTimeout(clickTimeout);
+          clickTimeout = null;
+          this.editEO(idx, eoListWrapper);
+        } else {
+          clickTimeout = window.setTimeout(() => {
+            this.selectedEOIndex = idx;
+            this.applyMoves(this.eoList[this.selectedEOIndex] || "", true);
+            this.saveState();
+            this.renderEOList();
+            clickTimeout = null;
+          }, 200);
+        }
+      });
+      eoListWrapper.appendChild(row);
+    });
+
+    const addRow = document.createElement("div");
+    addRow.className = "eo-add-row";
+    const addButton = document.createElement("button");
+    addButton.textContent = "+";
+    addButton.title = "Add EO";
+    addButton.className = "eo-add-button";
+    addButton.addEventListener("click", () => {
+      this.eoList.push("");
+      this.selectedEOIndex = this.eoList.length - 1;
+      this.saveState();
+      this.renderEOList();
+      this.applyMoves("", true);
+    });
+    addRow.appendChild(addButton);
+    eoListWrapper.appendChild(addRow);
+  }
+
+  private editEO(idx: number, eoListWrapper: HTMLElement) {
+    const eo = this.eoList[idx];
+    const input = document.createElement("input");
+    input.type = "text";
+    input.value = eo;
+    input.className = "eo-edit-input";
+    input.addEventListener("input", () => {
+      this.eoList[idx] = input.value;
+      this.applyMoves(input.value, true);
+      this.saveState();
+    });
+    input.addEventListener("blur", () => {
+      this.eoList[idx] = input.value;
+      this.saveState();
+      this.renderEOList();
+      this.applyMoves(this.eoList[this.selectedEOIndex] || "", true);
+    });
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        input.blur();
+      }
+    });
+    eoListWrapper.replaceChild(input, eoListWrapper.children[idx]);
+    input.focus();
+  }
+
+  private saveEOListDimensions() {
+    const eoListWrapper = document.getElementById(`${this.containerId}-eo-list-wrapper`) as HTMLDivElement;
+    if (!eoListWrapper) return;
+    const width = eoListWrapper.offsetWidth;
+    const height = eoListWrapper.offsetHeight;
+    const moveInput = document.getElementById(`${this.containerId}-move-input`) as HTMLTextAreaElement;
+    if (moveInput) {
+      moveInput.style.width = `${width}px`;
+      moveInput.style.height = `${height}px`;
+    }
+    this.saveState();
   }
 }

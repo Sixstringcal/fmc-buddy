@@ -681,3 +681,173 @@ body {
   background-color: #3d8b40;
   transform: scale(1.05);
 }
+
+.eo-switch-label {
+  margin-right: 6px;
+  font-weight: bold;
+  font-size: 1rem;
+  color: #ffa500;
+  letter-spacing: 0.5px;
+}
+
+.eo-switch-outer {
+  width: 38px;
+  height: 22px;
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+  display: inline-block;
+}
+.eo-switch-slider {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #ccc;
+  border-radius: 22px;
+  transition: background 0.2s;
+}
+.eo-switch-outer input:checked + .eo-switch-slider {
+  background: #ffa500;
+}
+.eo-switch-slider:before {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  font-size: 11px;
+  color: #fff;
+  z-index: 2;
+  pointer-events: none;
+  transition: left 0.2s;
+}
+.eo-switch-slider:after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  border-radius: 50%;
+  transition: left 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+}
+.eo-switch-outer input:checked + .eo-switch-slider:after {
+  left: 18px;
+}
+.eo-switch-outer input:checked + .eo-switch-slider:before {
+  left: 20px;
+}
+.eo-switch-outer .eo-switch-slider:after {
+  /* EO label inside the knob */
+  content: "EO";
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffa500;
+  font-size: 10px;
+  font-weight: bold;
+  left: 2px;
+  top: 2px;
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  border-radius: 50%;
+  transition: left 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+  text-align: center;
+  line-height: 18px;
+}
+
+.eo-list-wrapper {
+  display: block;
+  width: 80%;
+  min-width: 120px;
+  min-height: 40px;
+  height: 150px;
+  margin: 15px auto;
+  padding: 4px 0;
+  font-size: 1.3rem;
+  border: 2px solid #ffa500;
+  border-radius: 10px;
+  outline: none;
+  background: #fff;
+  resize: both;
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    background-color 0.3s ease;
+  text-align: left;
+  overflow-y: auto;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.eo-row {
+  padding: 2px 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  border-radius: 5px;
+  transition: background 0.15s;
+  margin: 0 2px;
+  user-select: none;
+}
+.eo-row:hover {
+  background: #ffe5b4;
+}
+
+.eo-row:active {
+  background: #ffd580;
+}
+
+.eo-edit-input {
+  width: 95%;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  border: 1px solid #ffa500;
+  border-radius: 5px;
+  padding: 4px 8px;
+  margin: 2px 0;
+  outline: none;
+  background: #fffbe6;
+  box-sizing: border-box;
+}
+
+.eo-edit-input:focus {
+  border-color: #007bff;
+  background: #f0f8ff;
+}
+
+.eo-add-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.eo-add-button {
+  background: #ffa500;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  transition: background 0.2s, transform 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+}
+.eo-add-button:hover {
+  background: #ff8800;
+  transform: scale(1.12);
+}
+.eo-add-button:active {
+  background: #ff8800;
+  transform: scale(0.98);
+}
