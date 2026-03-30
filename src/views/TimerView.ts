@@ -3,6 +3,7 @@ import { TimerSnapshot } from "../models/types";
 import { TimerDisplayView } from "./TimerDisplayView";
 import { TimerControlsView } from "./TimerControlsView";
 import { Div } from "../utils/ui";
+import { Css } from "../models/css";
 
 export class TimerView {
     private readonly _vm: TimerViewModel;
@@ -15,7 +16,7 @@ export class TimerView {
         this._vm = vm;
         this._scrambleEl = scrambleEl;
 
-        this._container = Div({ classes: "countdown-timer" });
+        this._container = Div({ classes: Css.CountdownTimer });
 
         this._display = new TimerDisplayView();
         this._display.appendTo(this._container);

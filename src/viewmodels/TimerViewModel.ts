@@ -1,11 +1,11 @@
 import { Observable } from "../core/Observable";
 import { ViewModel } from "../core/ViewModel";
-import { TimerSnapshot, TimerStatus } from "../models/types";
+import { PlayPauseState, TimerSnapshot, TimerStatus } from "../models/types";
 
 export class TimerViewModel extends ViewModel {
     private readonly _totalSeconds: number;
     private _remainingSeconds: number;
-    private _status: TimerStatus = "idle";
+    private _status: TimerStatus = TimerStatus.Idle;
     private _intervalId: ReturnType<typeof setInterval> | null = null;
 
     readonly snapshot: Observable<TimerSnapshot>;
@@ -22,27 +22,27 @@ export class TimerViewModel extends ViewModel {
     }
 
     start(): void {
-        if (this._status === "running" || this._remainingSeconds === 0) return;
-        this._status = "running";
+        if (this._status === TimerStatus.Running || this._remainingSeconds === 0) return;
+        this._status = TimerStatus.Running;
         this._intervalId = setInterval(() => this._tick(), 1_000);
         this._emit();
     }
 
     pause(): void {
-        if (this._status !== "running") return;
+        if (this._status !== TimerStatus.Running) return;
         this._clearInterval();
-        this._status = "paused";
+        this._status = TimerStatus.Paused;
         this._emit();
     }
 
     toggle(): void {
-        this._status === "running" ? this.pause() : this.start();
+        this._status === TimerStatus.Running ? this.pause() : this.start();
     }
 
     reset(): void {
         this._clearInterval();
         this._remainingSeconds = this._totalSeconds;
-        this._status = "idle";
+        this._status = TimerStatus.Idle;
         this._emit();
     }
 
@@ -53,7 +53,7 @@ export class TimerViewModel extends ViewModel {
         }
         if (this._remainingSeconds === 0) {
             this._clearInterval();
-            this._status = "expired";
+            this._status = TimerStatus.Expired;
             this._emit();
             this.onExpired?.();
         }
@@ -74,7 +74,7 @@ export class TimerViewModel extends ViewModel {
             totalSeconds: this._totalSeconds,
             status: this._status,
             displayTime: `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`,
-            playPauseState: this._status === "running" ? "pause" : "play",
+            playPauseState: this._status === TimerStatus.Running ? PlayPauseState.Pause : PlayPauseState.Play,
             showRestart: this._remainingSeconds < this._totalSeconds,
         };
     }

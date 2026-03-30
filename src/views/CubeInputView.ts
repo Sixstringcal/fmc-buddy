@@ -4,6 +4,8 @@ import { CubeNodeViewModel } from "../viewmodels/CubeNodeViewModel";
 import { EOListView } from "./EOListView";
 import { MoveTextareaView } from "./MoveTextareaView";
 import { Row, Button } from "../utils/ui";
+import { Css } from "../models/css";
+import { CubeInputText } from "../models/types";
 
 export interface CubeInputCallbacks {
   onDuplicate: () => void;
@@ -58,15 +60,15 @@ export class CubeInputView {
     }
 
     inputWrap.appendChild(Button({
-      text: "+",
-      classes: "duplicate-button",
-      title: "Duplicate this cube view",
+      text: CubeInputText.DuplicateIcon,
+      classes: Css.DuplicateButton,
+      title: CubeInputText.DuplicateTitle,
       onClick: () => this._callbacks.onDuplicate(),
     }));
     inputWrap.appendChild(Button({
-      text: "✔",
-      classes: "finish-button",
-      title: "Finish this cube view",
+      text: CubeInputText.FinishIcon,
+      classes: Css.FinishButton,
+      title: CubeInputText.FinishTitle,
       onClick: () => this._callbacks.onFinish(),
     }));
   }

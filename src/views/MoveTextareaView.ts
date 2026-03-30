@@ -10,6 +10,7 @@ import {
   validMove,
 } from "../utils/moveAlgebra";
 import { applyAutoCloseParen, toggleLineComment } from "../utils/textEditing";
+import { Css } from "../models/css";
 
 export interface MoveTextareaCallbacks {
   addTargetConnection: (connection: Connection) => void;
@@ -33,7 +34,7 @@ export class MoveTextareaView {
     this._twistyPlayer = twistyPlayer;
     this._callbacks = callbacks;
 
-    this._textarea = TextArea({ classes: "move-input", style: { flexGrow: "1" } });
+    this._textarea = TextArea({ classes: Css.MoveInput, style: { flexGrow: "1" } });
 
     this._restoreSize();
     this._bindEvents();

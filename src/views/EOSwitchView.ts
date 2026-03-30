@@ -1,6 +1,8 @@
 import { CubeNodeViewModel } from "../viewmodels/CubeNodeViewModel";
 import { toggleEOView } from "../actions/cubeNodeActions";
 import { Row, Span, Input, el } from "../utils/ui";
+import { Css } from "../models/css";
+import { EOSwitchText } from "../models/types";
 
 export class EOSwitchView {
   private readonly _wrapper: HTMLDivElement;
@@ -9,21 +11,21 @@ export class EOSwitchView {
   constructor(vm: CubeNodeViewModel) {
     this._switchInput = Input({
       type: "checkbox",
-      classes: "eo-switch-checkbox",
+      classes: Css.EoSwitchCheckbox,
       style: { display: "none" },
       on: { change: () => toggleEOView(vm) },
     });
 
     const eoSwitch = el("label", {
-      classes: "eo-switch-outer",
-      title: "Toggle EO View",
+      classes: Css.EoSwitchOuter,
+      title: EOSwitchText.Title,
     },
       this._switchInput,
-      Span({ classes: "eo-switch-slider" }),
+      Span({ classes: Css.EoSwitchSlider }),
     );
 
     this._wrapper = Row({ align: "center", style: { marginRight: "8px", height: "32px" } },
-      Span({ text: "EO", classes: "eo-switch-label", style: { marginRight: "6px", fontWeight: "bold", fontSize: "1rem" } }),
+      Span({ text: EOSwitchText.Label, classes: Css.EoSwitchLabel, style: { marginRight: "6px", fontWeight: "bold", fontSize: "1rem" } }),
       eoSwitch,
     );
   }

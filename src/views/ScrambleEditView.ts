@@ -1,6 +1,8 @@
 import { ScrambleViewModel } from "../viewmodels/ScrambleViewModel";
 import { applyManualScramble } from "../actions/scrambleActions";
 import { Div, Button, Input } from "../utils/ui";
+import { Css } from "../models/css";
+import { Key, ScrambleEditIcon } from "../models/types";
 
 export class ScrambleEditView {
     private readonly _vm: ScrambleViewModel;
@@ -13,9 +15,9 @@ export class ScrambleEditView {
     constructor(vm: ScrambleViewModel) {
         this._vm = vm;
 
-        this._label = Div({ text: "Scramble:", classes: "scramble-label" });
-        this._text = Div({ classes: "scramble-text" });
-        this._editBtn = Button({ html: "✏️", classes: "edit-button", onClick: () => this._handleClick() });
+        this._label = Div({ text: "Scramble:", classes: Css.ScrambleLabel });
+        this._text = Div({ classes: Css.ScrambleText });
+        this._editBtn = Button({ html: ScrambleEditIcon.Edit, classes: Css.EditButton, onClick: () => this._handleClick() });
     }
 
     appendTo(parent: HTMLElement): void {
@@ -36,18 +38,18 @@ export class ScrambleEditView {
         } else {
             this._isEditing = true;
             const input = Input({
-                classes: "scramble-input",
+                classes: Css.ScrambleInput,
                 value: this._vm.scramble.get(),
                 on: {
                     input: () => applyManualScramble(this._vm, input.value),
-                    keydown: (e) => { if (e.key === "Enter") this._commit(input); },
+                    keydown: (e) => { if (e.key === Key.Enter) this._commit(input); },
                 },
             });
             this._currentInput = input;
             this._text.parentElement?.insertBefore(input, this._text);
             this._text.textContent = "";
             input.select();
-            this._editBtn.textContent = "✔️";
+            this._editBtn.textContent = ScrambleEditIcon.Commit;
         }
     }
 
@@ -55,7 +57,7 @@ export class ScrambleEditView {
         applyManualScramble(this._vm, input.value);
         input.remove();
         this._currentInput = null;
-        this._editBtn.textContent = "✏️";
+        this._editBtn.textContent = ScrambleEditIcon.Edit;
         this._isEditing = false;
     }
 }

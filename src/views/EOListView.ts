@@ -8,6 +8,8 @@ import {
 } from "../actions/cubeNodeActions";
 import { EO_SELECTED_BG } from "../consts";
 import { EOSwitchView } from "./EOSwitchView";
+import { Css } from "../models/css";
+import { EOListText, Key, Display } from "../models/types";
 
 export class EOListView {
   private readonly _vm: CubeNodeViewModel;
@@ -28,8 +30,8 @@ export class EOListView {
 
   createListWrapper(): HTMLDivElement {
     this._wrapper = Div({
-      classes: "eo-list-wrapper",
-      style: { display: "none" },
+      classes: Css.EoListWrapper,
+      style: { display: Display.None },
       on: {
         mouseup: () => updateTextboxDimensions(this._vm, this._wrapper!.offsetWidth, this._wrapper!.offsetHeight),
         touchend: () => updateTextboxDimensions(this._vm, this._wrapper!.offsetWidth, this._wrapper!.offsetHeight),
@@ -40,16 +42,16 @@ export class EOListView {
 
   toggle(isEO: boolean, textarea: HTMLTextAreaElement, counter: HTMLElement): void {
     if (isEO) {
-      textarea.style.display = "none";
-      if (this._wrapper) this._wrapper.style.display = "";
+      textarea.style.display = Display.None;
+      if (this._wrapper) this._wrapper.style.display = Display.Default;
       this._eoSwitch.setChecked(true);
-      counter.style.display = "none";
+      counter.style.display = Display.None;
       if (this._vm.eoList.get().length === 0) addEOEntry(this._vm);
     } else {
-      textarea.style.display = "";
-      if (this._wrapper) this._wrapper.style.display = "none";
+      textarea.style.display = Display.Default;
+      if (this._wrapper) this._wrapper.style.display = Display.None;
       this._eoSwitch.setChecked(false);
-      counter.style.display = "";
+      counter.style.display = Display.Default;
     }
 
     this.render();
@@ -58,7 +60,7 @@ export class EOListView {
   render(): void {
     const wrapper = this._wrapper;
     if (!wrapper) return;
-    if (wrapper.querySelector(".eo-edit-input")) return;
+    if (wrapper.querySelector(`.${Css.EoEditInput}`)) return;
     wrapper.innerHTML = "";
     if (!this._vm.isEOView.get()) return;
 
@@ -68,8 +70,8 @@ export class EOListView {
     for (let rank = 0; rank < indexed.length; rank++) {
       const { eo, idx } = indexed[rank];
       const row = Div({
-        classes: "eo-row",
-        text: eo || "(Double click to edit)",
+        classes: Css.EoRow,
+        text: eo || EOListText.Placeholder,
         title: eo,
         style: idx === selectedIdx ? { background: EO_SELECTED_BG } : {},
       });
@@ -92,8 +94,8 @@ export class EOListView {
     }
 
     wrapper.appendChild(
-      Div({ classes: "eo-add-row" },
-        Button({ text: "+", title: "Add EO", classes: "eo-add-button", onClick: () => addEOEntry(this._vm) }),
+      Div({ classes: Css.EoAddRow },
+        Button({ text: EOListText.AddIcon, title: EOListText.AddTitle, classes: Css.EoAddButton, onClick: () => addEOEntry(this._vm) }),
       ),
     );
   }
@@ -111,7 +113,7 @@ export class EOListView {
   }
 
   private _editRow(idx: number, rank: number, wrapper: HTMLElement): void {
-    const input = Input({ type: "text", value: this._vm.eoList.get()[idx] ?? "", classes: "eo-edit-input" });
+    const input = Input({ type: "text", value: this._vm.eoList.get()[idx] ?? "", classes: Css.EoEditInput });
     let cancelled = false;
 
     input.addEventListener("input", () => {
@@ -122,18 +124,18 @@ export class EOListView {
 
     input.addEventListener("blur", () => {
       if (!cancelled) updateEOEntry(this._vm, idx, input.value);
-      input.classList.remove("eo-edit-input");
+      input.classList.remove(Css.EoEditInput);
       this.render();
     });
     input.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") input.blur();
-      if (e.key === "Escape") {
+      if (e.key === Key.Enter) input.blur();
+      if (e.key === Key.Escape) {
         cancelled = true;
         input.blur();
       }
     });
 
-    const rows = wrapper.querySelectorAll(".eo-row");
+    const rows = wrapper.querySelectorAll(`.${Css.EoRow}`);
     if (rows[rank]) wrapper.replaceChild(input, rows[rank]);
     input.focus();
   }

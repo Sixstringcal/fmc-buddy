@@ -124,8 +124,8 @@ export const Div = (props: ElProps = {}, ...children: Child[]) =>
 export const Span = (props: ElProps = {}, ...children: Child[]) =>
     el("span", props, ...children);
 
-export const Button = (props: ElProps = {}, ...children: Child[]) =>
-    el("button", props, ...children);
+export const Button = (props: ElProps = {}, ...children: Child[]): HTMLButtonElement =>
+    el("button", props, ...children) as HTMLButtonElement;
 
 export const TextArea = (
     props: ElProps & { placeholder?: string; rows?: number } = {},

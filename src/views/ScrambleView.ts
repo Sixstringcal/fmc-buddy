@@ -4,6 +4,7 @@ import { ScrambleEditView } from "./ScrambleEditView";
 import { ScrambleInverseView } from "./ScrambleInverseView";
 import { ScrambleRefreshButtonView } from "./ScrambleRefreshButtonView";
 import { Div } from "../utils/ui";
+import { Css } from "../models/css";
 
 export class ScrambleView {
     private _vm: ScrambleViewModel | null = null;
@@ -29,7 +30,7 @@ export class ScrambleView {
         }
 
         this._container = Div({
-            classes: "scramble-container",
+            classes: Css.ScrambleContainer,
             style: "position:absolute;top:0;left:0;",
         });
 
