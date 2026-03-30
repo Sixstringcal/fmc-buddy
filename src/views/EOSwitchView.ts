@@ -3,6 +3,7 @@ import { toggleEOView } from "../actions/cubeNodeActions";
 import { Row, Span, Input, el } from "../utils/ui";
 import { Css } from "../models/css";
 import { EOSwitchText } from "../models/types";
+import { Spacing } from "../consts";
 
 export class EOSwitchView {
   private readonly _wrapper: HTMLDivElement;
@@ -24,8 +25,8 @@ export class EOSwitchView {
       Span({ classes: Css.EoSwitchSlider }),
     );
 
-    this._wrapper = Row({ align: "center", style: { marginRight: "8px", height: "32px" } },
-      Span({ text: EOSwitchText.Label, classes: Css.EoSwitchLabel, style: { marginRight: "6px", fontWeight: "bold", fontSize: "1rem" } }),
+    this._wrapper = Row({ align: "center", style: { marginRight: Spacing.SM, height: "32px" } },
+      Span({ text: EOSwitchText.Label, classes: Css.EoSwitchLabel, style: { marginRight: Spacing.XS, fontWeight: "bold", fontSize: "1rem" } }),
       eoSwitch,
     );
   }

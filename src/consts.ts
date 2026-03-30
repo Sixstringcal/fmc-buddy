@@ -10,3 +10,9 @@ export const EO_SELECTED_BG = "#e0e0e0";
 /** Milliseconds before a single-click timeout is treated as a single click
  *  rather than the start of a double-click. */
 export const DOUBLE_CLICK_DELAY_MS = 200;
+
+export const Spacing = {
+    XS: "6px",
+    SM: "8px",
+    MD: "10px",
+} as const;
