@@ -3,7 +3,6 @@
  *
  * Instead of:
  *   const btn = document.createElement("button");
- *   btn.id = "foo";
  *   btn.classList.add("bar");
  *   btn.textContent = "Click me";
  *   btn.addEventListener("click", handler);
@@ -11,17 +10,23 @@
  *
  * You write:
  *   parent.appendChild(
- *     Button({ id: "foo", classes: "bar", text: "Click me", onClick: handler })
+ *     Button({ classes: "bar", text: "Click me", onClick: handler })
  *   );
  *
  * Or compose layouts:
- *   Row({ id: "input-wrapper", align: "flex-start" },
+ *   Row({ align: "flex-start" },
  *     Button({ text: "+", classes: "dup-button", onClick: onDup }),
  *     Button({ text: "✔", classes: "fin-button", onClick: onFin }),
  *   )
+ *
+ * Every element gets an auto-generated ID (`_ui-N`). You can read `element.id`
+ * (e.g. for tests) but IDs are never set by callers.
  */
 
 type Child = HTMLElement | SVGElement | null | undefined | false;
+
+let _idCounter = 0;
+const _nextId = () => `_ui-${++_idCounter}`;
 
 /** Event map restricted to the listener signature el() accepts. */
 type EventHandlers = {
@@ -29,7 +34,6 @@ type EventHandlers = {
 };
 
 export interface ElProps {
-    id?: string;
     /** One class, a space-separated string, or an array of class names. */
     classes?: string | string[];
     /** CSS object (partial CSSStyleDeclaration) OR a raw cssText string. */
@@ -62,6 +66,7 @@ export interface LayoutProps extends ElProps {
  *
  * @example
  *   el("button", { text: "OK", classes: "primary", onClick: submit })
+ *   // result.id is auto-generated, e.g. "_ui-3" — read-only by convention
  */
 export function el<K extends keyof HTMLElementTagNameMap>(
     tag: K,
@@ -69,8 +74,7 @@ export function el<K extends keyof HTMLElementTagNameMap>(
     ...children: Child[]
 ): HTMLElementTagNameMap[K] {
     const node = document.createElement(tag);
-
-    if (props.id) node.id = props.id;
+    node.id = _nextId();
 
     if (props.classes) {
         const list = Array.isArray(props.classes)
@@ -167,7 +171,7 @@ function _layoutStyle(
  * A vertically stacked flex container (flex-direction: column).
  *
  * @example
- *   Column({ id: "sidebar", gap: "8px" },
+ *   Column({ gap: "8px" },
  *     Button({ text: "A" }),
  *     Button({ text: "B" }),
  *   )
@@ -185,7 +189,7 @@ export function Column(props: LayoutProps = {}, ...children: Child[]): HTMLDivEl
  *
  * @example
  *   Row({ align: "flex-start", style: { width: "100%" } },
- *     TextArea({ id: "input" }),
+ *     TextArea(),
  *     Button({ text: "+", onClick: onDup }),
  *   )
  */

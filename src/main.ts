@@ -31,7 +31,7 @@ async function initializeApp(): Promise<void> {
     }
 
     appVm.timerVm.onExpired = () => alert("Time's up!");
-    const timerView = new TimerView(appVm.timerVm);
+    const timerView = new TimerView(appVm.timerVm, scrambleView.getElement());
     const timerEl = timerView.getElement();
     timerEl.classList.add("fixed-timer");
     document.body.appendChild(timerEl);

@@ -9,11 +9,13 @@ export class TimerView {
     private readonly _container: HTMLElement;
     private readonly _display: TimerDisplayView;
     private readonly _controls: TimerControlsView;
+    private readonly _scrambleEl: HTMLElement;
 
-    constructor(vm: TimerViewModel) {
+    constructor(vm: TimerViewModel, scrambleEl: HTMLElement) {
         this._vm = vm;
+        this._scrambleEl = scrambleEl;
 
-        this._container = Div({ id: "countdown-timer", classes: "countdown-timer" });
+        this._container = Div({ classes: "countdown-timer" });
 
         this._display = new TimerDisplayView();
         this._display.appendTo(this._container);
@@ -41,10 +43,7 @@ export class TimerView {
     }
 
     private _positionBelowScramble(): void {
-        const scramble = document.getElementById("scramble-container");
-        if (!scramble) return;
-
-        const sr = scramble.getBoundingClientRect();
+        const sr = this._scrambleEl.getBoundingClientRect();
         const tr = this._container.getBoundingClientRect();
 
         const overlapping = !(

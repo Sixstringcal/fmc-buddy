@@ -20,8 +20,10 @@ export class CubeView {
   private readonly _twistyPlayer: TwistyPlayer;
 
   private _container!: HTMLElement;
+  private _deleteBtn!: HTMLButtonElement;
   private _minBtn!: HTMLButtonElement;
   private _dragIcon!: HTMLDivElement;
+  private _colWrap!: HTMLDivElement;
   private _preview: HTMLDivElement | null = null;
   private _toast: HTMLDivElement | null = null;
 
@@ -52,13 +54,13 @@ export class CubeView {
     CubeView._registry.set(this._vm.id, this);
     this._buildHeaderControls(container);
 
-    const colWrap = Div({ classes: "column-wrapper" });
-    container.appendChild(colWrap);
+    this._colWrap = Div({ classes: "column-wrapper" });
+    container.appendChild(this._colWrap);
 
     this._controlsView = new CubeControlsView(this._vm);
-    this._controlsView.appendTo(colWrap);
+    this._controlsView.appendTo(this._colWrap);
 
-    container.insertBefore(this._twistyPlayer, colWrap);
+    container.insertBefore(this._twistyPlayer, this._colWrap);
 
     this._inputView = new CubeInputView(this._vm, this._twistyPlayer, {
       onDuplicate: () => this._onDuplicate(),
@@ -66,7 +68,7 @@ export class CubeView {
       addTargetConnection: (c) => this.addTargetConnection(c),
       showToast: (msg) => this._showToast(msg),
     });
-    this._inputView.appendTo(colWrap);
+    this._inputView.appendTo(this._colWrap);
 
     this._bindObservables(container);
     this._bindContainerFocus(container);
@@ -112,7 +114,8 @@ export class CubeView {
   private _ensureContainer(): HTMLElement {
     let container = document.getElementById(this._vm.id);
     if (!container) {
-      container = Div({ id: this._vm.id, classes: "cube-container" });
+      container = Div({ classes: "cube-container" });
+      container.id = this._vm.id;
       document.body.appendChild(container);
     }
     this._container = container;
@@ -132,7 +135,7 @@ export class CubeView {
   }
 
   private _buildHeaderControls(container: HTMLElement): void {
-    container.appendChild(Button({
+    this._deleteBtn = Button({
       classes: "delete-button",
       text: "×",
       title: "Delete this cube view",
@@ -144,7 +147,8 @@ export class CubeView {
           container.remove();
         }
       },
-    }));
+    });
+    container.appendChild(this._deleteBtn);
 
     this._minBtn = Button({
       classes: "minimize-button",
@@ -168,53 +172,48 @@ export class CubeView {
     );
     this._vm.rawMoves.subscribe((raw) => {
       if (this._preview && this._vm.isMinimized.get()) {
-        const firstLine = raw.split("\n")[0] ?? "";
-        this._preview.textContent =
-          firstLine.length > 30 ? firstLine.substring(0, 27) + "..." : firstLine || "(Empty)";
+        this._preview.textContent = this._previewText(raw);
       }
     });
     this._controlsView.bindObservables(container);
     this._inputView.bindObservables(this._controlsView.getMoveCounterElement());
   }
 
+  private _previewText(raw: string): string {
+    const firstLine = raw.split("\n")[0] ?? "";
+    return firstLine.length > 30 ? firstLine.substring(0, 27) + "..." : firstLine || "(Empty)";
+  }
+
   private _renderMinimized(minimized: boolean, container: HTMLElement): void {
+    const bodyElements: HTMLElement[] = [
+      this._deleteBtn,
+      this._twistyPlayer as unknown as HTMLElement,
+      this._colWrap,
+    ];
+
     if (minimized) {
       this._minBtn.innerHTML = "+";
-      this._minBtn.classList.add("maximize-button");
-      this._minBtn.classList.remove("minimize-button");
+      this._minBtn.classList.replace("minimize-button", "maximize-button");
       this._dragIcon.style.display = "none";
 
       if (!this._preview) {
         this._preview = Div({ classes: "text-preview", onClick: () => toggleMinimized(this._vm) });
         container.appendChild(this._preview);
       }
+      this._preview.textContent = this._previewText(this._vm.rawMoves.get());
       this._preview.style.display = "block";
 
-      const raw = this._vm.rawMoves.get();
-      const firstLine = raw.split("\n")[0] ?? "";
-      this._preview.textContent =
-        firstLine.length > 30 ? firstLine.substring(0, 27) + "..." : firstLine || "(Empty)";
-
-      for (const child of Array.from(container.children) as HTMLElement[]) {
-        if (child !== this._minBtn && child !== this._preview && child !== this._dragIcon) {
-          child.style.display = "none";
-        }
-      }
+      for (const el of bodyElements) el.style.display = "none";
       container.classList.add("cube-container-minimized");
       this._makeContainerDraggable(container);
     } else {
       this._minBtn.innerHTML = "−";
-      this._minBtn.classList.add("minimize-button");
-      this._minBtn.classList.remove("maximize-button");
+      this._minBtn.classList.replace("maximize-button", "minimize-button");
       this._dragIcon.style.display = "";
 
       if (this._preview) this._preview.style.display = "none";
 
-      for (const child of Array.from(container.children) as HTMLElement[]) {
-        if (child !== this._preview) {
-          (child as HTMLElement).style.display = "";
-        }
-      }
+      for (const el of bodyElements) el.style.display = "";
       container.classList.remove("cube-container-minimized");
     }
   }

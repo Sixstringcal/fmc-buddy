@@ -5,7 +5,7 @@ export class TimerDisplayView {
   private readonly _span: HTMLSpanElement;
 
   constructor() {
-    this._span = Span({ id: "timer-display" });
+    this._span = Span();
   }
 
   appendTo(parent: HTMLElement): void {

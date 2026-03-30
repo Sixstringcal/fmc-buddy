@@ -9,8 +9,8 @@ export class TimerControlsView {
   private readonly _restartBtn: HTMLButtonElement;
 
   constructor(vm: TimerViewModel) {
-    this._playPauseBtn = Button({ id: "timer-button", classes: "timer-button", onClick: () => toggleTimer(vm) });
-    this._restartBtn = Button({ id: "restart-button", classes: "timer-button", style: { display: "none" }, onClick: () => resetTimer(vm) });
+    this._playPauseBtn = Button({ classes: "timer-button", onClick: () => toggleTimer(vm) });
+    this._restartBtn = Button({ classes: "timer-button", style: { display: "none" }, onClick: () => resetTimer(vm) });
   }
 
   appendTo(parent: HTMLElement): void {

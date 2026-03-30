@@ -14,7 +14,7 @@ export class ScrambleEditView {
         this._vm = vm;
 
         this._label = Div({ text: "Scramble:", classes: "scramble-label" });
-        this._text = Div({ id: "scramble-text" });
+        this._text = Div({ classes: "scramble-text" });
         this._editBtn = Button({ html: "✏️", classes: "edit-button", onClick: () => this._handleClick() });
     }
 

@@ -10,7 +10,7 @@ export class ScrambleInverseView {
     constructor(vm: ScrambleViewModel) {
         this._vm = vm;
 
-        this._text = Div({ id: "inverse-scramble-text", classes: "inverse-scramble" });
+        this._text = Div({ classes: "inverse-scramble" });
         this._btn = Button({ classes: "inverse-button", title: "Toggle inverse scramble", onClick: () => toggleInverseScramble(this._vm) });
     }
 

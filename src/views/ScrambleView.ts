@@ -8,13 +8,15 @@ import { Div } from "../utils/ui";
 export class ScrambleView {
     private _vm: ScrambleViewModel | null = null;
     /** @deprecated */
-    private readonly _container: HTMLElement;
+    private _container!: HTMLElement;
     private _editView!: ScrambleEditView;
     private _inverseView!: ScrambleInverseView;
     private _refreshButton!: ScrambleRefreshButtonView;
 
-    constructor(_legacyScramble: string) {
-        this._container = Div();
+    constructor(_legacyScramble: string) { }
+
+    getElement(): HTMLElement {
+        return this._container;
     }
 
     bindViewModel(vm: ScrambleViewModel): void {
@@ -26,9 +28,10 @@ export class ScrambleView {
             throw new Error("ScrambleView: call bindViewModel() before initialize()");
         }
 
-        this._container.id = "scramble-container";
-        this._container.className = "scramble-container";
-        this._container.style.cssText = "position:absolute;top:0;left:0;";
+        this._container = Div({
+            classes: "scramble-container",
+            style: "position:absolute;top:0;left:0;",
+        });
 
         this._editView = new ScrambleEditView(this._vm);
         this._editView.appendTo(this._container);
