@@ -3,27 +3,15 @@ import { Connection } from "../Connection";
 import { CubeNodeViewModel } from "../viewmodels/CubeNodeViewModel";
 import type { AppViewModel } from "../viewmodels/AppViewModel";
 import {
-  applyMovesFromInput,
   deleteNode,
   duplicateEOEntry,
   duplicateNode,
   finishNode,
-  markAsBad,
-  markAsGood,
-  selectEO,
-  setSecretRotation,
-  toggleEOView,
   toggleMinimized,
-  toggleMode,
-  updateEOEntry,
-  addEOEntry,
   updatePosition,
-  updateTextboxDimensions,
 } from "../actions/cubeNodeActions";
-import { normalizeApostrophes, separateMoves, stripComments, validMove } from "../utils/moveAlgebra";
-
-const BLUE = "#007bff";
-const ORANGE = "#ffa500";
+import { CubeControlsView } from "./CubeControlsView";
+import { CubeInputView } from "./CubeInputView";
 
 export class CubeView {
   private readonly _vm: CubeNodeViewModel;
@@ -32,6 +20,8 @@ export class CubeView {
 
   private _sourceConnections: Connection[] = [];
   private _targetConnections: Connection[] = [];
+  private _controlsView!: CubeControlsView;
+  private _inputView!: CubeInputView;
 
   private static _connectionsLoaded = false;
 
@@ -51,8 +41,26 @@ export class CubeView {
 
   initialize(): void {
     const container = this._ensureContainer();
-    this._buildControls(container);
-    this._buildInputSection(container);
+    this._buildHeaderControls(container);
+
+    const colWrap = document.createElement("div");
+    colWrap.id = `${this._vm.id}-column-wrapper`;
+    colWrap.classList.add("column-wrapper");
+    container.appendChild(colWrap);
+
+    this._controlsView = new CubeControlsView(this._vm);
+    this._controlsView.appendTo(colWrap);
+
+    container.insertBefore(this._twistyPlayer, colWrap);
+
+    this._inputView = new CubeInputView(this._vm, this._twistyPlayer, {
+      onDuplicate: () => this._onDuplicate(),
+      onFinish: () => this._onFinish(),
+      addTargetConnection: (c) => this.addTargetConnection(c),
+      showToast: (msg) => this._showToast(msg),
+    });
+    this._inputView.appendTo(colWrap);
+
     this._bindObservables(container);
     this._bindContainerFocus(container);
   }
@@ -117,7 +125,7 @@ export class CubeView {
     return container;
   }
 
-  private _buildControls(container: HTMLElement): void {
+  private _buildHeaderControls(container: HTMLElement): void {
     // Delete button
     const deleteBtn = document.createElement("button");
     deleteBtn.id = `${this._vm.id}-delete-button`;
@@ -152,225 +160,18 @@ export class CubeView {
     container.appendChild(dragIcon);
 
     this._setupDrag(dragIcon, container);
-
-    // Column wrapper hosts the rest of the UI
-    const colWrap = document.createElement("div");
-    colWrap.id = `${this._vm.id}-column-wrapper`;
-    colWrap.classList.add("column-wrapper");
-    container.appendChild(colWrap);
-
-    // Move counter
-    const moveCounter = document.createElement("div");
-    moveCounter.id = `${this._vm.id}-move-counter`;
-    moveCounter.classList.add("move-counter");
-    moveCounter.textContent = "Moves: 0";
-    colWrap.appendChild(moveCounter);
-
-    // Normal/Inverse toggle
-    const toggleBtn = document.createElement("button");
-    toggleBtn.id = `${this._vm.id}-toggle-button`;
-    toggleBtn.classList.add("toggle-button", "button");
-    toggleBtn.addEventListener("click", () => toggleMode(this._vm));
-    colWrap.appendChild(toggleBtn);
-
-    // Rotation buttons
-    const rotContainer = document.createElement("div");
-    rotContainer.id = `${this._vm.id}-rotation-buttons`;
-    rotContainer.classList.add("rotation-button-container");
-    colWrap.appendChild(rotContainer);
-
-    const rotations: Array<{ label: string; key: string }> = [
-      { label: "x", key: "x" },
-      { label: "x'", key: "x'" },
-      { label: "z", key: "z" },
-      { label: "z'", key: "z'" },
-    ];
-    for (const { label, key } of rotations) {
-      const btn = document.createElement("button");
-      btn.id = `${this._vm.id}-rotation-${label.replace("'", "prime")}-button`;
-      btn.textContent = label;
-      btn.classList.add("rotation-button", "button");
-      btn.addEventListener("click", () => setSecretRotation(this._vm, key));
-      rotContainer.appendChild(btn);
-    }
-
-    // Twisty player
-    container.insertBefore(this._twistyPlayer, colWrap);
-
-    // Rating wrapper
-    const ratingWrap = document.createElement("div");
-    ratingWrap.id = `${this._vm.id}-rating-wrapper`;
-    ratingWrap.classList.add("rating-wrapper");
-    ratingWrap.style.cssText = "display:flex;justify-content:center;margin-top:10px;";
-
-    // Thumbs up button
-    const thumbsUp = document.createElement("button");
-    thumbsUp.innerHTML = "👍";
-    thumbsUp.classList.add("rating-button", "thumbs-up");
-    thumbsUp.style.marginRight = "10px";
-    thumbsUp.addEventListener("click", () => markAsGood(this._vm));
-    ratingWrap.appendChild(thumbsUp);
-
-    // Thumbs down button
-    const thumbsDown = document.createElement("button");
-    thumbsDown.innerHTML = "👎";
-    thumbsDown.classList.add("rating-button", "thumbs-down");
-    thumbsDown.addEventListener("click", () => markAsBad(this._vm));
-    ratingWrap.appendChild(thumbsDown);
-
-    colWrap.appendChild(ratingWrap);
-  }
-
-  private _buildInputSection(container: HTMLElement): void {
-    const colWrap = document.getElementById(`${this._vm.id}-column-wrapper`)!;
-
-    const inputWrap = document.createElement("div");
-    inputWrap.id = `${this._vm.id}-input-wrapper`;
-    inputWrap.style.cssText = "display:flex;flex-direction:row;align-items:flex-start;width:100%;";
-    colWrap.appendChild(inputWrap);
-
-    const eoSwitchWrapper = document.createElement("div");
-    eoSwitchWrapper.style.cssText = "display:flex;align-items:center;margin-right:8px;height:32px;";
-
-    const eoLabel = document.createElement("span");
-    eoLabel.textContent = "EO";
-    eoLabel.className = "eo-switch-label";
-    eoLabel.style.cssText = "margin-right:6px;font-weight:bold;font-size:1rem;";
-    eoSwitchWrapper.appendChild(eoLabel);
-
-    const eoSwitch = document.createElement("label");
-    eoSwitch.id = `${this._vm.id}-eo-switch`;
-    eoSwitch.className = "eo-switch-outer";
-    eoSwitch.title = "Toggle EO View";
-    eoSwitch.innerHTML = `<input type="checkbox" class="eo-switch-checkbox" style="display:none;"><span class="eo-switch-slider"></span>`;
-    eoSwitch.querySelector("input")!.addEventListener("change", () =>
-      toggleEOView(this._vm),
-    );
-    eoSwitchWrapper.appendChild(eoSwitch);
-    inputWrap.appendChild(eoSwitchWrapper);
-
-    const textarea = document.createElement("textarea");
-    textarea.id = `${this._vm.id}-move-input`;
-    textarea.classList.add("move-input");
-    textarea.style.flexGrow = "1";
-    this._initTextarea(textarea);
-    inputWrap.appendChild(textarea);
-
-    const eoListWrapper = document.createElement("div");
-    eoListWrapper.id = `${this._vm.id}-eo-list-wrapper`;
-    eoListWrapper.className = "eo-list-wrapper";
-    eoListWrapper.style.display = "none";
-    eoListWrapper.addEventListener("mouseup", () => {
-      updateTextboxDimensions(
-        this._vm,
-        eoListWrapper.offsetWidth,
-        eoListWrapper.offsetHeight,
-      );
-    });
-    eoListWrapper.addEventListener("touchend", () => {
-      updateTextboxDimensions(
-        this._vm,
-        eoListWrapper.offsetWidth,
-        eoListWrapper.offsetHeight,
-      );
-    });
-    inputWrap.insertBefore(eoListWrapper, textarea);
-
-    const dims = this._vm.textboxDimensions.get();
-    if (dims) {
-      textarea.style.width = `${dims.width}px`;
-      textarea.style.height = `${dims.height}px`;
-      eoListWrapper.style.width = `${dims.width}px`;
-      eoListWrapper.style.height = `${dims.height}px`;
-    }
-
-    const dupBtn = document.createElement("button");
-    dupBtn.id = `${this._vm.id}-duplicate-button`;
-    dupBtn.textContent = "+";
-    dupBtn.classList.add("duplicate-button");
-    dupBtn.title = "Duplicate this cube view";
-    dupBtn.addEventListener("click", () => this._onDuplicate());
-    inputWrap.appendChild(dupBtn);
-
-    const finBtn = document.createElement("button");
-    finBtn.id = `${this._vm.id}-finish-button`;
-    finBtn.textContent = "✔";
-    finBtn.classList.add("finish-button");
-    finBtn.title = "Finish this cube view";
-    finBtn.addEventListener("click", () => this._onFinish());
-    inputWrap.appendChild(finBtn);
-
-    textarea.addEventListener("mouseup", () => {
-      updateTextboxDimensions(this._vm, textarea.offsetWidth, textarea.offsetHeight);
-    });
-    textarea.addEventListener("touchend", () => {
-      updateTextboxDimensions(this._vm, textarea.offsetWidth, textarea.offsetHeight);
-    });
   }
 
   private _bindObservables(container: HTMLElement): void {
-    const vm = this._vm;
-
-    vm.playerAlg.subscribe((alg) => {
+    this._vm.playerAlg.subscribe((alg) => {
       this._twistyPlayer.alg = alg;
     });
-
-    vm.moveCount.subscribe((count) => {
-      const el = document.getElementById(`${vm.id}-move-counter`);
-      if (el) el.textContent = `Moves: ${count}`;
-    });
-
-    vm.isNormal.subscribe((normal) => {
-      const btn = document.getElementById(`${vm.id}-toggle-button`) as HTMLButtonElement | null;
-      if (btn) {
-        btn.textContent = normal ? "Normal" : "Inverse";
-        btn.style.backgroundColor = normal ? BLUE : ORANGE;
-      }
-    });
-
-    vm.isGood.subscribe((good) => {
-      const up = container.querySelector<HTMLElement>(".thumbs-up");
-      const dn = container.querySelector<HTMLElement>(".thumbs-down");
-      up?.classList.remove("active");
-      dn?.classList.remove("active");
-      if (good === true) {
-        container.style.backgroundColor = "lightgreen";
-        up?.classList.add("active");
-      } else if (good === false) {
-        container.style.backgroundColor = "lightcoral";
-        dn?.classList.add("active");
-      } else {
-        container.style.backgroundColor = "";
-      }
-    });
-
-    vm.isMinimized.subscribe((minimized) => this._renderMinimized(minimized, container));
-
-    vm.secretRotation.subscribe((active) => {
-      const map: Record<string, string> = {
-        x: `${vm.id}-rotation-x-button`,
-        "x'": `${vm.id}-rotation-xprime-button`,
-        z: `${vm.id}-rotation-z-button`,
-        "z'": `${vm.id}-rotation-zprime-button`,
-      };
-      for (const [key, id] of Object.entries(map)) {
-        const btn = document.getElementById(id) as HTMLButtonElement | null;
-        if (!btn) continue;
-        if (key === active) {
-          btn.style.backgroundColor = BLUE;
-          btn.style.color = "white";
-        } else {
-          btn.style.backgroundColor = "";
-          btn.style.color = BLUE;
-        }
-      }
-    });
-
-    vm.isEOView.subscribe((isEO) => this._renderEOViewToggle(isEO, container));
-
-    const renderEO = () => this._renderEOList();
-    vm.eoList.subscribe(renderEO);
-    vm.selectedEOIndex.subscribe(renderEO);
+    this._vm.isMinimized.subscribe((minimized) =>
+      this._renderMinimized(minimized, container),
+    );
+    const counter = document.getElementById(`${this._vm.id}-move-counter`)!;
+    this._controlsView.bindObservables(container);
+    this._inputView.bindObservables(counter);
   }
 
   private _renderMinimized(minimized: boolean, container: HTMLElement): void {
@@ -429,206 +230,6 @@ export class CubeView {
       }
       container.classList.remove("cube-container-minimized");
     }
-  }
-
-  private _renderEOViewToggle(isEO: boolean, _container: HTMLElement): void {
-    const textarea = document.getElementById(`${this._vm.id}-move-input`) as HTMLTextAreaElement | null;
-    const eoWrap = document.getElementById(`${this._vm.id}-eo-list-wrapper`);
-    const eoSwitch = document.getElementById(`${this._vm.id}-eo-switch`);
-    const counter = document.getElementById(`${this._vm.id}-move-counter`);
-
-    if (isEO) {
-      if (textarea) textarea.style.display = "none";
-      if (eoWrap) eoWrap.style.display = "";
-      if (eoSwitch) (eoSwitch.querySelector("input") as HTMLInputElement).checked = true;
-      if (counter) counter.style.display = "none";
-      if (this._vm.eoList.get().length === 0) {
-        addEOEntry(this._vm);
-      }
-    } else {
-      if (textarea) textarea.style.display = "";
-      if (eoWrap) eoWrap.style.display = "none";
-      if (eoSwitch) (eoSwitch.querySelector("input") as HTMLInputElement).checked = false;
-      if (counter) counter.style.display = "";
-    }
-    this._renderEOList();
-  }
-
-  private _renderEOList(): void {
-    const wrapper = document.getElementById(
-      `${this._vm.id}-eo-list-wrapper`,
-    ) as HTMLDivElement | null;
-    if (!wrapper) return;
-    if (wrapper.querySelector(".eo-edit-input")) return;
-    wrapper.innerHTML = "";
-    if (!this._vm.isEOView.get()) return;
-
-    const eoList = this._vm.eoList.get();
-    const selectedIdx = this._vm.selectedEOIndex.get();
-
-    const indexed = eoList
-      .map((eo, idx) => ({ eo, idx }))
-      .sort((a, b) => {
-        const ca = this._countMovesForDisplay(a.eo);
-        const cb = this._countMovesForDisplay(b.eo);
-        return ca !== cb ? ca - cb : a.idx - b.idx;
-      });
-
-    for (let rank = 0; rank < indexed.length; rank++) {
-      const { eo, idx } = indexed[rank];
-      const row = document.createElement("div");
-      row.classList.add("eo-row");
-      if (idx === selectedIdx) row.style.background = "#e0e0e0";
-      row.textContent = eo || "(Double click to edit)";
-      row.title = eo;
-
-      const capturedRank = rank;
-      let clickTimeout: ReturnType<typeof setTimeout> | null = null;
-      row.addEventListener("click", () => {
-        if (clickTimeout !== null) {
-          clearTimeout(clickTimeout);
-          clickTimeout = null;
-          this._editEORow(idx, capturedRank, wrapper);
-        } else {
-          clickTimeout = setTimeout(() => {
-            selectEO(this._vm, idx);
-            clickTimeout = null;
-          }, 200);
-        }
-      });
-      wrapper.appendChild(row);
-    }
-
-    const addRow = document.createElement("div");
-    addRow.className = "eo-add-row";
-    const addBtn = document.createElement("button");
-    addBtn.textContent = "+";
-    addBtn.title = "Add EO";
-    addBtn.className = "eo-add-button";
-    addBtn.addEventListener("click", () => addEOEntry(this._vm));
-    addRow.appendChild(addBtn);
-    wrapper.appendChild(addRow);
-  }
-
-  private _editEORow(idx: number, rank: number, wrapper: HTMLElement): void {
-    const input = document.createElement("input");
-    input.type = "text";
-    input.value = this._vm.eoList.get()[idx] ?? "";
-    input.className = "eo-edit-input";
-    let cancelled = false;
-    input.addEventListener("blur", () => {
-      if (!cancelled) updateEOEntry(this._vm, idx, input.value);
-      input.classList.remove("eo-edit-input");
-      this._renderEOList();
-    });
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") { input.blur(); }
-      if (e.key === "Escape") { cancelled = true; input.blur(); }
-    });
-    const rows = wrapper.querySelectorAll(".eo-row");
-    if (rows[rank]) {
-      wrapper.replaceChild(input, rows[rank]);
-    }
-    input.focus();
-  }
-
-  private _initTextarea(textarea: HTMLTextAreaElement): void {
-    const saved = this._vm.rawMoves.get();
-    if (saved) textarea.value = saved;
-
-    let previousValue = textarea.value;
-
-    textarea.addEventListener("input", () => {
-      const cursor = textarea.selectionStart;
-      const cur = textarea.value;
-
-      if (cursor > 0 && cur.length > previousValue.length && cur[cursor - 1] === "(") {
-        textarea.value =
-          cur.slice(0, cursor) + ")" + cur.slice(cursor);
-        textarea.selectionStart = textarea.selectionEnd = cursor;
-      }
-      if (
-        cursor > 0 &&
-        cur.length > previousValue.length &&
-        cur[cursor - 1] === ")" &&
-        cursor < cur.length &&
-        cur[cursor] === ")"
-      ) {
-        textarea.value = cur.slice(0, cursor) + cur.slice(cursor + 1);
-        textarea.selectionStart = textarea.selectionEnd = cursor;
-      }
-
-      previousValue = textarea.value;
-      const movesUpToCursor = textarea.value.substring(0, textarea.selectionStart);
-      applyMovesFromInput(this._vm, textarea.value);
-      const cleaned = normalizeApostrophes(stripComments(textarea.value));
-      const { normalMoves, inverseMoves } = separateMoves(cleaned);
-      for (const t of [...normalMoves.split(/\s+/), ...inverseMoves.split(/\s+/)].filter(Boolean)) {
-        if (!validMove(t)) this._showToast(`Invalid move: ${t}`);
-      }
-      this._twistyPlayer.alg = this._vm.computePreviewAlg(movesUpToCursor);
-      const preview = document.getElementById(`${this._vm.id}-text-preview`);
-      if (preview && this._vm.isMinimized.get()) {
-        const firstLine = textarea.value.split("\n")[0] ?? "";
-        preview.textContent =
-          firstLine.length > 30 ? firstLine.substring(0, 27) + "..." : firstLine || "(Empty)";
-      }
-    });
-
-    textarea.addEventListener("click", () => {
-      const movesUpToCursor = textarea.value.substring(0, textarea.selectionStart);
-      this._twistyPlayer.alg = this._vm.computePreviewAlg(movesUpToCursor);
-    });
-
-    const arrowKeys = new Set([
-      "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End",
-    ]);
-    textarea.addEventListener("keyup", (e) => {
-      if (arrowKeys.has(e.key)) {
-        const movesUpToCursor = textarea.value.substring(0, textarea.selectionStart);
-        this._twistyPlayer.alg = this._vm.computePreviewAlg(movesUpToCursor);
-      }
-    });
-
-    // Toggle comments
-    textarea.addEventListener("keydown", (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "/") {
-        e.preventDefault();
-        const val = textarea.value;
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const lines = val.split("\n");
-        const startLine = val.substring(0, start).split("\n").length - 1;
-        const endLine = val.substring(0, end).split("\n").length - 1;
-        const allCommented = lines
-          .slice(startLine, endLine + 1)
-          .every((l) => l.trimStart().startsWith("//"));
-
-        for (let i = startLine; i <= endLine; i++) {
-          if (allCommented) {
-            if (lines[i].trimStart().startsWith("//")) {
-              const indent = lines[i].length - lines[i].trimStart().length;
-              lines[i] = lines[i].substring(0, indent) + lines[i].substring(indent + 2);
-            }
-          } else {
-            lines[i] = "//" + lines[i];
-          }
-        }
-
-        textarea.value = lines.join("\n");
-        textarea.setSelectionRange(
-          start,
-          end + (allCommented ? -2 : 2) * (endLine - startLine + 1),
-        );
-        textarea.dispatchEvent(new Event("input", { bubbles: true }));
-      }
-    });
-
-    textarea.addEventListener("addTargetConnection", (e: CustomEvent) => {
-      if (e.detail?.connection) {
-        this.addTargetConnection(e.detail.connection);
-      }
-    });
   }
 
   private _setupDrag(handle: HTMLElement, container: HTMLElement): void {
@@ -779,9 +380,7 @@ export class CubeView {
       this._spawnChildView(newVm);
       return;
     }
-    const textarea = document.getElementById(
-      `${this._vm.id}-move-input`,
-    ) as HTMLTextAreaElement | null;
+    const textarea = this._inputView.getTextarea();
     const start = textarea?.selectionStart ?? 0;
     const end = textarea?.selectionEnd ?? 0;
     const newVm = duplicateNode(this._vm, this._appVm, start, end);
@@ -966,13 +565,4 @@ export class CubeView {
     setTimeout(() => toast!.classList.remove("show"), 3000);
   }
 
-  private _countMovesForDisplay(eo: string): number {
-    // Inline here to avoid circular import; mirrors countMoves() in moveAlgebra.
-    const COUNTABLE = /^(R|L|F|B|U|D|Rw|Lw|Fw|Bw|Uw|Dw)(2|'|w2|w')?$/;
-    if (!eo.trim()) return 0;
-    return eo
-      .split(/\s+/)
-      .filter((t) => COUNTABLE.test(t))
-      .length;
-  }
 }
