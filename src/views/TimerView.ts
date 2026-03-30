@@ -1,18 +1,17 @@
-import { TimerViewModel } from "./viewmodels/TimerViewModel";
-import { toggleTimer, resetTimer } from "./actions/timerActions";
-import { TimerSnapshot } from "./models/types";
-import { loadSvg } from "./utils/svgLoader";
+import { TimerViewModel } from "../viewmodels/TimerViewModel";
+import { toggleTimer, resetTimer } from "../actions/timerActions";
+import { TimerSnapshot } from "../models/types";
+import { loadSvg } from "../utils/svgLoader";
 
-export class Timer {
+export class TimerView {
     private readonly _vm: TimerViewModel;
     private _container!: HTMLElement;
     private _display!: HTMLElement;
     private _playPauseBtn!: HTMLButtonElement;
     private _restartBtn!: HTMLButtonElement;
 
-    constructor(private readonly duration: number, private readonly onComplete?: () => void) {
-        this._vm = new TimerViewModel(duration);
-        this._vm.onExpired = onComplete ?? null;
+    constructor(vm: TimerViewModel) {
+        this._vm = vm;
         this._buildDOM();
         this._loadIcons().then(() => this._bindObservables());
 

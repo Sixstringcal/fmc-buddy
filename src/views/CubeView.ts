@@ -1,7 +1,7 @@
 import { TwistyPlayer } from "cubing/twisty";
-import { Connection } from "./Connection";
-import { CubeNodeViewModel } from "./viewmodels/CubeNodeViewModel";
-import type { AppViewModel } from "./viewmodels/AppViewModel";
+import { Connection } from "../Connection";
+import { CubeNodeViewModel } from "../viewmodels/CubeNodeViewModel";
+import type { AppViewModel } from "../viewmodels/AppViewModel";
 import {
   applyMovesFromInput,
   deleteNode,
@@ -19,8 +19,8 @@ import {
   addEOEntry,
   updatePosition,
   updateTextboxDimensions,
-} from "./actions/cubeNodeActions";
-import { normalizeApostrophes, separateMoves, stripComments, validMove } from "./utils/moveAlgebra";
+} from "../actions/cubeNodeActions";
+import { normalizeApostrophes, separateMoves, stripComments, validMove } from "../utils/moveAlgebra";
 
 const BLUE = "#007bff";
 const ORANGE = "#ffa500";

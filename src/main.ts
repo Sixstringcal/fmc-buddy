@@ -1,7 +1,7 @@
 import { AppViewModel } from "./viewmodels/AppViewModel";
-import { ScrambleView } from "./ScrambleView";
-import { Timer } from "./Timer";
-import { CubeView } from "./CubeView";
+import { ScrambleView } from "./views/ScrambleView";
+import { TimerView } from "./views/TimerView";
+import { CubeView } from "./views/CubeView";
 import { generateNewScramble } from "./actions/scrambleActions";
 import { throttle } from "./utils/throttle";
 import { AppRepository } from "./repositories/AppRepository";
@@ -30,8 +30,9 @@ async function initializeApp(): Promise<void> {
         await generateNewScramble(appVm.scrambleVm);
     }
 
-    const timer = new Timer(60 * 60, () => alert("Time's up!"));
-    const timerEl = timer.getElement();
+    appVm.timerVm.onExpired = () => alert("Time's up!");
+    const timerView = new TimerView(appVm.timerVm);
+    const timerEl = timerView.getElement();
     timerEl.classList.add("fixed-timer");
     document.body.appendChild(timerEl);
 
@@ -66,10 +67,7 @@ async function initializeApp(): Promise<void> {
 
     appVm.scrambleVm.scramble.subscribe((_scramble) => { });
 
-    // Patch: override the refresh button behaviour to do a full reset.
     patchScrambleRefresh(appVm, cubeViews);
-
-    // ── Layout ─────────────────────────────────────────────────────────────────
 
     updateDocumentBoundaries();
     const throttledUpdate = throttle(updateDocumentBoundaries, 100);
@@ -80,14 +78,11 @@ async function initializeApp(): Promise<void> {
     hideLoadingOverlay(loading);
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
 function spawnNewNode(appVm: AppViewModel): CubeView {
     const vm = appVm.createCubeNode();
     const view = new CubeView(appVm, vm);
     view.initialize();
 
-    // Position it away from existing nodes
     requestAnimationFrame(() => {
         const container = document.getElementById(vm.id);
         if (container) {

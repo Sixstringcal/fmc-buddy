@@ -1,10 +1,10 @@
-import { ScrambleViewModel } from "./viewmodels/ScrambleViewModel";
+import { ScrambleViewModel } from "../viewmodels/ScrambleViewModel";
 import {
     applyManualScramble,
     generateNewScramble,
     toggleInverseScramble,
-} from "./actions/scrambleActions";
-import { loadSvg } from "./utils/svgLoader";
+} from "../actions/scrambleActions";
+import { loadSvg } from "../utils/svgLoader";
 
 export class ScrambleView {
     private _vm: ScrambleViewModel | null = null;
