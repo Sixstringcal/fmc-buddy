@@ -12,11 +12,18 @@ import {
 } from "../actions/cubeNodeActions";
 import { CubeControlsView } from "./CubeControlsView";
 import { CubeInputView } from "./CubeInputView";
+import { Div, Button } from "../utils/ui";
 
 export class CubeView {
   private readonly _vm: CubeNodeViewModel;
   private readonly _appVm: AppViewModel;
   private readonly _twistyPlayer: TwistyPlayer;
+
+  private _container!: HTMLElement;
+  private _minBtn!: HTMLButtonElement;
+  private _dragIcon!: HTMLDivElement;
+  private _preview: HTMLDivElement | null = null;
+  private _toast: HTMLDivElement | null = null;
 
   private _sourceConnections: Connection[] = [];
   private _targetConnections: Connection[] = [];
@@ -24,6 +31,7 @@ export class CubeView {
   private _inputView!: CubeInputView;
 
   private static _connectionsLoaded = false;
+  private static _registry = new Map<string, CubeView>();
 
   constructor(
     appVm: AppViewModel,
@@ -41,11 +49,10 @@ export class CubeView {
 
   initialize(): void {
     const container = this._ensureContainer();
+    CubeView._registry.set(this._vm.id, this);
     this._buildHeaderControls(container);
 
-    const colWrap = document.createElement("div");
-    colWrap.id = `${this._vm.id}-column-wrapper`;
-    colWrap.classList.add("column-wrapper");
+    const colWrap = Div({ classes: "column-wrapper" });
     container.appendChild(colWrap);
 
     this._controlsView = new CubeControlsView(this._vm);
@@ -105,11 +112,10 @@ export class CubeView {
   private _ensureContainer(): HTMLElement {
     let container = document.getElementById(this._vm.id);
     if (!container) {
-      container = document.createElement("div");
-      container.id = this._vm.id;
-      container.classList.add("cube-container");
+      container = Div({ id: this._vm.id, classes: "cube-container" });
       document.body.appendChild(container);
     }
+    this._container = container;
 
     const pos = this._vm.position.get();
     container.style.left = `${pos.left}px`;
@@ -126,40 +132,31 @@ export class CubeView {
   }
 
   private _buildHeaderControls(container: HTMLElement): void {
-    // Delete button
-    const deleteBtn = document.createElement("button");
-    deleteBtn.id = `${this._vm.id}-delete-button`;
-    deleteBtn.textContent = "×";
-    deleteBtn.classList.add("delete-button");
-    deleteBtn.title = "Delete this cube view";
-    deleteBtn.addEventListener("click", () => {
-      if (confirm("Are you sure you want to delete this cube view?")) {
-        this._removeConnections();
-        deleteNode(this._vm, this._appVm);
-        container.remove();
-      }
+    container.appendChild(Button({
+      classes: "delete-button",
+      text: "×",
+      title: "Delete this cube view",
+      onClick: () => {
+        if (confirm("Are you sure you want to delete this cube view?")) {
+          this._removeConnections();
+          deleteNode(this._vm, this._appVm);
+          CubeView._registry.delete(this._vm.id);
+          container.remove();
+        }
+      },
+    }));
+
+    this._minBtn = Button({
+      classes: "minimize-button",
+      html: "−",
+      onClick: (e) => { e.stopPropagation(); toggleMinimized(this._vm); },
     });
-    container.appendChild(deleteBtn);
+    container.appendChild(this._minBtn);
 
-    // Minimize button
-    const minBtn = document.createElement("button");
-    minBtn.id = `${this._vm.id}-minimize-button`;
-    minBtn.classList.add("minimize-button");
-    minBtn.innerHTML = "−";
-    minBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      toggleMinimized(this._vm);
-    });
-    container.appendChild(minBtn);
+    this._dragIcon = Div({ classes: "drag-icon", html: "&#x2807;" });
+    container.appendChild(this._dragIcon);
 
-    // Drag icon
-    const dragIcon = document.createElement("div");
-    dragIcon.id = `${this._vm.id}-drag-icon`;
-    dragIcon.classList.add("drag-icon");
-    dragIcon.innerHTML = "&#x2807;";
-    container.appendChild(dragIcon);
-
-    this._setupDrag(dragIcon, container);
+    this._setupDrag(this._dragIcon, container);
   }
 
   private _bindObservables(container: HTMLElement): void {
@@ -169,62 +166,52 @@ export class CubeView {
     this._vm.isMinimized.subscribe((minimized) =>
       this._renderMinimized(minimized, container),
     );
-    const counter = document.getElementById(`${this._vm.id}-move-counter`)!;
+    this._vm.rawMoves.subscribe((raw) => {
+      if (this._preview && this._vm.isMinimized.get()) {
+        const firstLine = raw.split("\n")[0] ?? "";
+        this._preview.textContent =
+          firstLine.length > 30 ? firstLine.substring(0, 27) + "..." : firstLine || "(Empty)";
+      }
+    });
     this._controlsView.bindObservables(container);
-    this._inputView.bindObservables(counter);
+    this._inputView.bindObservables(this._controlsView.getMoveCounterElement());
   }
 
   private _renderMinimized(minimized: boolean, container: HTMLElement): void {
-    const minBtn = document.getElementById(`${this._vm.id}-minimize-button`);
-    const dragIcon = document.getElementById(`${this._vm.id}-drag-icon`);
-
     if (minimized) {
-      if (minBtn) {
-        minBtn.innerHTML = "+";
-        minBtn.classList.add("maximize-button");
-        minBtn.classList.remove("minimize-button");
-      }
-      if (dragIcon) dragIcon.style.display = "none";
+      this._minBtn.innerHTML = "+";
+      this._minBtn.classList.add("maximize-button");
+      this._minBtn.classList.remove("minimize-button");
+      this._dragIcon.style.display = "none";
 
-      let preview = document.getElementById(`${this._vm.id}-text-preview`);
-      if (!preview) {
-        preview = document.createElement("div");
-        preview.id = `${this._vm.id}-text-preview`;
-        preview.classList.add("text-preview");
-        preview.addEventListener("click", () => toggleMinimized(this._vm));
-        container.appendChild(preview);
+      if (!this._preview) {
+        this._preview = Div({ classes: "text-preview", onClick: () => toggleMinimized(this._vm) });
+        container.appendChild(this._preview);
       }
-      preview.style.display = "block";
+      this._preview.style.display = "block";
 
       const raw = this._vm.rawMoves.get();
       const firstLine = raw.split("\n")[0] ?? "";
-      preview.textContent =
+      this._preview.textContent =
         firstLine.length > 30 ? firstLine.substring(0, 27) + "..." : firstLine || "(Empty)";
 
       for (const child of Array.from(container.children) as HTMLElement[]) {
-        if (
-          child.id !== `${this._vm.id}-minimize-button` &&
-          child.id !== `${this._vm.id}-text-preview` &&
-          child.id !== `${this._vm.id}-drag-icon`
-        ) {
+        if (child !== this._minBtn && child !== this._preview && child !== this._dragIcon) {
           child.style.display = "none";
         }
       }
       container.classList.add("cube-container-minimized");
       this._makeContainerDraggable(container);
     } else {
-      if (minBtn) {
-        minBtn.innerHTML = "−";
-        minBtn.classList.add("minimize-button");
-        minBtn.classList.remove("maximize-button");
-      }
-      if (dragIcon) dragIcon.style.display = "";
+      this._minBtn.innerHTML = "−";
+      this._minBtn.classList.add("minimize-button");
+      this._minBtn.classList.remove("maximize-button");
+      this._dragIcon.style.display = "";
 
-      const preview = document.getElementById(`${this._vm.id}-text-preview`);
-      if (preview) preview.style.display = "none";
+      if (this._preview) this._preview.style.display = "none";
 
       for (const child of Array.from(container.children) as HTMLElement[]) {
-        if (child.id !== `${this._vm.id}-text-preview`) {
+        if (child !== this._preview) {
           (child as HTMLElement).style.display = "";
         }
       }
@@ -358,16 +345,14 @@ export class CubeView {
       if (
         target.tagName === "BUTTON" ||
         target.tagName === "TEXTAREA" ||
-        target.id === `${this._vm.id}-drag-icon` ||
+        target === this._dragIcon ||
         target.closest(".twisty-player-component") ||
         target.classList.contains("rating-button") ||
         target.classList.contains("text-preview")
       ) {
         return;
       }
-      const textarea = document.getElementById(
-        `${this._vm.id}-move-input`,
-      ) as HTMLTextAreaElement | null;
+      const textarea = this._inputView.getTextarea();
       if (textarea && !this._vm.isMinimized.get()) {
         textarea.focus();
       }
@@ -396,11 +381,10 @@ export class CubeView {
     const view = new CubeView(this._appVm, childVm);
     view.initialize();
 
-    const parentContainer = document.getElementById(this._vm.id);
-    const childContainer = document.getElementById(childVm.id);
+    const childContainer = view._container;
 
-    if (parentContainer && childContainer) {
-      const pos = this._findNonOverlappingPosition(parentContainer);
+    if (this._container && childContainer) {
+      const pos = this._findNonOverlappingPosition(this._container);
       childContainer.style.position = "absolute";
       childContainer.style.top = `${pos.top}px`;
       childContainer.style.left = `${pos.left}px`;
@@ -425,12 +409,7 @@ export class CubeView {
     conn.setVisible(true);
     this._sourceConnections.push(conn);
 
-    const targetTextarea = document.getElementById(`${targetId}-move-input`);
-    if (targetTextarea) {
-      targetTextarea.dispatchEvent(
-        new CustomEvent("addTargetConnection", { detail: { connection: conn } }),
-      );
-    }
+    CubeView._registry.get(targetId)?.addTargetConnection(conn);
 
     this._appVm.addConnection({ sourceId, targetId });
     conn.updatePosition();
@@ -551,18 +530,13 @@ export class CubeView {
   }
 
   private _showToast(message: string): void {
-    const toastId = `${this._vm.id}-toast`;
-    let toast = document.getElementById(toastId);
-    if (!toast) {
-      toast = document.createElement("div");
-      toast.id = toastId;
-      toast.classList.add("toast");
-      const container = document.getElementById(this._vm.id);
-      if (container) container.appendChild(toast);
+    if (!this._toast) {
+      this._toast = Div({ classes: "toast" });
+      this._container.appendChild(this._toast);
     }
-    toast.textContent = message;
-    toast.classList.add("show");
-    setTimeout(() => toast!.classList.remove("show"), 3000);
+    this._toast.textContent = message;
+    this._toast.classList.add("show");
+    setTimeout(() => this._toast!.classList.remove("show"), 3000);
   }
 
 }

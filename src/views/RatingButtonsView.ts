@@ -1,5 +1,6 @@
 import { CubeNodeViewModel } from "../viewmodels/CubeNodeViewModel";
 import { markAsGood, markAsBad } from "../actions/cubeNodeActions";
+import { Row, Button } from "../utils/ui";
 
 export class RatingButtonsView {
   private readonly _vm: CubeNodeViewModel;
@@ -8,23 +9,11 @@ export class RatingButtonsView {
   constructor(vm: CubeNodeViewModel) {
     this._vm = vm;
 
-    this._wrapper = document.createElement("div");
-    this._wrapper.id = `${vm.id}-rating-wrapper`;
-    this._wrapper.classList.add("rating-wrapper");
-    this._wrapper.style.cssText = "display:flex;justify-content:center;margin-top:10px;";
-
-    const thumbsUp = document.createElement("button");
-    thumbsUp.innerHTML = "👍";
-    thumbsUp.classList.add("rating-button", "thumbs-up");
-    thumbsUp.style.marginRight = "10px";
-    thumbsUp.addEventListener("click", () => markAsGood(this._vm));
-    this._wrapper.appendChild(thumbsUp);
-
-    const thumbsDown = document.createElement("button");
-    thumbsDown.innerHTML = "👎";
-    thumbsDown.classList.add("rating-button", "thumbs-down");
-    thumbsDown.addEventListener("click", () => markAsBad(this._vm));
-    this._wrapper.appendChild(thumbsDown);
+    this._wrapper = Row(
+      { classes: "rating-wrapper", justify: "center", style: { marginTop: "10px" } },
+      Button({ html: "👍", classes: "rating-button thumbs-up", style: { marginRight: "10px" }, onClick: () => markAsGood(this._vm) }),
+      Button({ html: "👎", classes: "rating-button thumbs-down", onClick: () => markAsBad(this._vm) }),
+    );
   }
 
   appendTo(parent: HTMLElement): void {

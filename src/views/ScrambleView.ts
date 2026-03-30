@@ -3,6 +3,7 @@ import { applyManualScramble } from "../actions/scrambleActions";
 import { ScrambleEditView } from "./ScrambleEditView";
 import { ScrambleInverseView } from "./ScrambleInverseView";
 import { ScrambleRefreshButtonView } from "./ScrambleRefreshButtonView";
+import { Div } from "../utils/ui";
 
 export class ScrambleView {
     private _vm: ScrambleViewModel | null = null;
@@ -13,7 +14,7 @@ export class ScrambleView {
     private _refreshButton!: ScrambleRefreshButtonView;
 
     constructor(_legacyScramble: string) {
-        this._container = document.createElement("div");
+        this._container = Div();
     }
 
     bindViewModel(vm: ScrambleViewModel): void {
@@ -26,7 +27,7 @@ export class ScrambleView {
         }
 
         this._container.id = "scramble-container";
-        this._container.classList.add("scramble-container");
+        this._container.className = "scramble-container";
         this._container.style.cssText = "position:absolute;top:0;left:0;";
 
         this._editView = new ScrambleEditView(this._vm);

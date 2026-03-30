@@ -1,5 +1,6 @@
 import { ScrambleViewModel } from "../viewmodels/ScrambleViewModel";
 import { applyManualScramble } from "../actions/scrambleActions";
+import { Div, Button, Input } from "../utils/ui";
 
 export class ScrambleEditView {
     private readonly _vm: ScrambleViewModel;
@@ -12,17 +13,9 @@ export class ScrambleEditView {
     constructor(vm: ScrambleViewModel) {
         this._vm = vm;
 
-        this._label = document.createElement("div");
-        this._label.textContent = "Scramble:";
-        this._label.classList.add("scramble-label");
-
-        this._text = document.createElement("div");
-        this._text.id = "scramble-text";
-
-        this._editBtn = document.createElement("button");
-        this._editBtn.innerHTML = "✏️";
-        this._editBtn.classList.add("edit-button");
-        this._editBtn.addEventListener("click", () => this._handleClick());
+        this._label = Div({ text: "Scramble:", classes: "scramble-label" });
+        this._text = Div({ id: "scramble-text" });
+        this._editBtn = Button({ html: "✏️", classes: "edit-button", onClick: () => this._handleClick() });
     }
 
     appendTo(parent: HTMLElement): void {
@@ -42,13 +35,13 @@ export class ScrambleEditView {
             this._commit(this._currentInput);
         } else {
             this._isEditing = true;
-            const input = document.createElement("input");
-            input.type = "text";
-            input.value = this._vm.scramble.get();
-            input.classList.add("scramble-input");
-            input.addEventListener("input", () => applyManualScramble(this._vm, input.value));
-            input.addEventListener("keydown", (e) => {
-                if (e.key === "Enter") this._commit(input);
+            const input = Input({
+                classes: "scramble-input",
+                value: this._vm.scramble.get(),
+                on: {
+                    input: () => applyManualScramble(this._vm, input.value),
+                    keydown: (e) => { if (e.key === "Enter") this._commit(input); },
+                },
             });
             this._currentInput = input;
             this._text.parentElement?.insertBefore(input, this._text);

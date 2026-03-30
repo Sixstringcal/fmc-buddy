@@ -2,22 +2,15 @@ import { TimerViewModel } from "../viewmodels/TimerViewModel";
 import { toggleTimer, resetTimer } from "../actions/timerActions";
 import { TimerSnapshot } from "../models/types";
 import { loadSvg } from "../utils/svgLoader";
+import { Button } from "../utils/ui";
 
 export class TimerControlsView {
   private readonly _playPauseBtn: HTMLButtonElement;
   private readonly _restartBtn: HTMLButtonElement;
 
   constructor(vm: TimerViewModel) {
-    this._playPauseBtn = document.createElement("button");
-    this._playPauseBtn.id = "timer-button";
-    this._playPauseBtn.classList.add("timer-button");
-    this._playPauseBtn.addEventListener("click", () => toggleTimer(vm));
-
-    this._restartBtn = document.createElement("button");
-    this._restartBtn.id = "restart-button";
-    this._restartBtn.classList.add("timer-button");
-    this._restartBtn.style.display = "none";
-    this._restartBtn.addEventListener("click", () => resetTimer(vm));
+    this._playPauseBtn = Button({ id: "timer-button", classes: "timer-button", onClick: () => toggleTimer(vm) });
+    this._restartBtn = Button({ id: "restart-button", classes: "timer-button", style: { display: "none" }, onClick: () => resetTimer(vm) });
   }
 
   appendTo(parent: HTMLElement): void {

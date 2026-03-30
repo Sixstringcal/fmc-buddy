@@ -1,5 +1,6 @@
 import { ScrambleViewModel } from "../viewmodels/ScrambleViewModel";
 import { toggleInverseScramble } from "../actions/scrambleActions";
+import { Div, Button } from "../utils/ui";
 
 export class ScrambleInverseView {
     private readonly _vm: ScrambleViewModel;
@@ -9,14 +10,8 @@ export class ScrambleInverseView {
     constructor(vm: ScrambleViewModel) {
         this._vm = vm;
 
-        this._text = document.createElement("div");
-        this._text.id = "inverse-scramble-text";
-        this._text.classList.add("inverse-scramble");
-
-        this._btn = document.createElement("button");
-        this._btn.classList.add("inverse-button");
-        this._btn.title = "Toggle inverse scramble";
-        this._btn.addEventListener("click", () => toggleInverseScramble(this._vm));
+        this._text = Div({ id: "inverse-scramble-text", classes: "inverse-scramble" });
+        this._btn = Button({ classes: "inverse-button", title: "Toggle inverse scramble", onClick: () => toggleInverseScramble(this._vm) });
     }
 
     appendTo(parent: HTMLElement): void {

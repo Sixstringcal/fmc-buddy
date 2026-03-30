@@ -1,4 +1,5 @@
 import { CubeNodeViewModel } from "../viewmodels/CubeNodeViewModel";
+import { Div } from "../utils/ui";
 
 export class MoveCounterView {
   private readonly _vm: CubeNodeViewModel;
@@ -6,10 +7,7 @@ export class MoveCounterView {
 
   constructor(vm: CubeNodeViewModel) {
     this._vm = vm;
-    this._el = document.createElement("div");
-    this._el.id = `${vm.id}-move-counter`;
-    this._el.classList.add("move-counter");
-    this._el.textContent = "Moves: 0";
+    this._el = Div({ classes: "move-counter", text: "Moves: 0" });
   }
 
   appendTo(parent: HTMLElement): void {

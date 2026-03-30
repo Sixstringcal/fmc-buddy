@@ -3,6 +3,7 @@ import { Connection } from "../Connection";
 import { CubeNodeViewModel } from "../viewmodels/CubeNodeViewModel";
 import { EOListView } from "./EOListView";
 import { MoveTextareaView } from "./MoveTextareaView";
+import { Row, Button } from "../utils/ui";
 
 export interface CubeInputCallbacks {
   onDuplicate: () => void;
@@ -13,7 +14,6 @@ export interface CubeInputCallbacks {
 
 export class CubeInputView {
   private readonly _vm: CubeNodeViewModel;
-  private readonly _id: string;
   private readonly _twistyPlayer: TwistyPlayer;
   private readonly _callbacks: CubeInputCallbacks;
 
@@ -26,7 +26,6 @@ export class CubeInputView {
     callbacks: CubeInputCallbacks,
   ) {
     this._vm = vm;
-    this._id = vm.id;
     this._twistyPlayer = twistyPlayer;
     this._callbacks = callbacks;
   }
@@ -34,10 +33,7 @@ export class CubeInputView {
   appendTo(parent: HTMLElement): void {
     this._eoListView = new EOListView(this._vm);
 
-    const inputWrap = document.createElement("div");
-    inputWrap.id = `${this._id}-input-wrapper`;
-    inputWrap.style.cssText =
-      "display:flex;flex-direction:row;align-items:flex-start;width:100%;";
+    const inputWrap = Row({ align: "flex-start", style: { width: "100%" } });
     parent.appendChild(inputWrap);
 
     // EO switch
@@ -61,23 +57,18 @@ export class CubeInputView {
       eoListWrapper.style.height = `${dims.height}px`;
     }
 
-    // Duplicate button
-    const dupBtn = document.createElement("button");
-    dupBtn.id = `${this._id}-duplicate-button`;
-    dupBtn.textContent = "+";
-    dupBtn.classList.add("duplicate-button");
-    dupBtn.title = "Duplicate this cube view";
-    dupBtn.addEventListener("click", () => this._callbacks.onDuplicate());
-    inputWrap.appendChild(dupBtn);
-
-    // Finish button
-    const finBtn = document.createElement("button");
-    finBtn.id = `${this._id}-finish-button`;
-    finBtn.textContent = "✔";
-    finBtn.classList.add("finish-button");
-    finBtn.title = "Finish this cube view";
-    finBtn.addEventListener("click", () => this._callbacks.onFinish());
-    inputWrap.appendChild(finBtn);
+    inputWrap.appendChild(Button({
+      text: "+",
+      classes: "duplicate-button",
+      title: "Duplicate this cube view",
+      onClick: () => this._callbacks.onDuplicate(),
+    }));
+    inputWrap.appendChild(Button({
+      text: "✔",
+      classes: "finish-button",
+      title: "Finish this cube view",
+      onClick: () => this._callbacks.onFinish(),
+    }));
   }
 
   bindObservables(counter: HTMLElement): void {

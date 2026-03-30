@@ -1,11 +1,11 @@
 import { TimerSnapshot } from "../models/types";
+import { Span } from "../utils/ui";
 
 export class TimerDisplayView {
   private readonly _span: HTMLSpanElement;
 
   constructor() {
-    this._span = document.createElement("span");
-    this._span.id = "timer-display";
+    this._span = Span({ id: "timer-display" });
   }
 
   appendTo(parent: HTMLElement): void {

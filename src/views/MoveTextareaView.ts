@@ -2,6 +2,7 @@ import { TwistyPlayer } from "cubing/twisty";
 import { Connection } from "../Connection";
 import { CubeNodeViewModel } from "../viewmodels/CubeNodeViewModel";
 import { applyMovesFromInput, updateTextboxDimensions } from "../actions/cubeNodeActions";
+import { TextArea } from "../utils/ui";
 import {
   normalizeApostrophes,
   separateMoves,
@@ -12,11 +13,11 @@ import {
 export interface MoveTextareaCallbacks {
   addTargetConnection: (connection: Connection) => void;
   showToast: (message: string) => void;
+  onRawMovesChange?: (raw: string) => void;
 }
 
 export class MoveTextareaView {
   private readonly _vm: CubeNodeViewModel;
-  private readonly _id: string;
   private readonly _twistyPlayer: TwistyPlayer;
   private readonly _callbacks: MoveTextareaCallbacks;
   private readonly _textarea: HTMLTextAreaElement;
@@ -28,14 +29,10 @@ export class MoveTextareaView {
     callbacks: MoveTextareaCallbacks,
   ) {
     this._vm = vm;
-    this._id = vm.id;
     this._twistyPlayer = twistyPlayer;
     this._callbacks = callbacks;
 
-    this._textarea = document.createElement("textarea");
-    this._textarea.id = `${this._id}-move-input`;
-    this._textarea.classList.add("move-input");
-    this._textarea.style.flexGrow = "1";
+    this._textarea = TextArea({ classes: "move-input", style: { flexGrow: "1" } });
 
     this._restoreSize();
     this._bindEvents();
@@ -137,12 +134,7 @@ export class MoveTextareaView {
       }
 
       // Update minimize preview text if visible
-      const preview = document.getElementById(`${this._id}-text-preview`);
-      if (preview && this._vm.isMinimized.get()) {
-        const firstLine = ta.value.split("\n")[0] ?? "";
-        preview.textContent =
-          firstLine.length > 30 ? firstLine.substring(0, 27) + "..." : firstLine || "(Empty)";
-      }
+      this._callbacks.onRawMovesChange?.(ta.value);
     });
 
     ta.addEventListener("click", () => {

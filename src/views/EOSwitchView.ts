@@ -1,29 +1,31 @@
 import { CubeNodeViewModel } from "../viewmodels/CubeNodeViewModel";
 import { toggleEOView } from "../actions/cubeNodeActions";
+import { Row, Span, Input, el } from "../utils/ui";
 
 export class EOSwitchView {
-  private readonly _id: string;
   private readonly _wrapper: HTMLDivElement;
+  private readonly _switchInput: HTMLInputElement;
 
   constructor(vm: CubeNodeViewModel) {
-    this._id = vm.id;
+    this._switchInput = Input({
+      type: "checkbox",
+      classes: "eo-switch-checkbox",
+      style: { display: "none" },
+      on: { change: () => toggleEOView(vm) },
+    });
 
-    this._wrapper = document.createElement("div");
-    this._wrapper.style.cssText = "display:flex;align-items:center;margin-right:8px;height:32px;";
+    const eoSwitch = el("label", {
+      classes: "eo-switch-outer",
+      title: "Toggle EO View",
+    },
+      this._switchInput,
+      Span({ classes: "eo-switch-slider" }),
+    );
 
-    const label = document.createElement("span");
-    label.textContent = "EO";
-    label.className = "eo-switch-label";
-    label.style.cssText = "margin-right:6px;font-weight:bold;font-size:1rem;";
-    this._wrapper.appendChild(label);
-
-    const eoSwitch = document.createElement("label");
-    eoSwitch.id = `${this._id}-eo-switch`;
-    eoSwitch.className = "eo-switch-outer";
-    eoSwitch.title = "Toggle EO View";
-    eoSwitch.innerHTML = `<input type="checkbox" class="eo-switch-checkbox" style="display:none;"><span class="eo-switch-slider"></span>`;
-    eoSwitch.querySelector("input")!.addEventListener("change", () => toggleEOView(vm));
-    this._wrapper.appendChild(eoSwitch);
+    this._wrapper = Row({ align: "center", style: { marginRight: "8px", height: "32px" } },
+      Span({ text: "EO", classes: "eo-switch-label", style: { marginRight: "6px", fontWeight: "bold", fontSize: "1rem" } }),
+      eoSwitch,
+    );
   }
 
   getElement(): HTMLElement {
@@ -31,7 +33,6 @@ export class EOSwitchView {
   }
 
   setChecked(checked: boolean): void {
-    const el = document.getElementById(`${this._id}-eo-switch`);
-    if (el) (el.querySelector("input") as HTMLInputElement).checked = checked;
+    this._switchInput.checked = checked;
   }
 }

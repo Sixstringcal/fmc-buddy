@@ -1,6 +1,7 @@
 import { CubeNodeViewModel } from "../viewmodels/CubeNodeViewModel";
 import { toggleMode } from "../actions/cubeNodeActions";
 import { BLUE, ORANGE } from "../consts";
+import { Button } from "../utils/ui";
 
 export class ModeToggleView {
   private readonly _vm: CubeNodeViewModel;
@@ -8,10 +9,7 @@ export class ModeToggleView {
 
   constructor(vm: CubeNodeViewModel) {
     this._vm = vm;
-    this._btn = document.createElement("button");
-    this._btn.id = `${vm.id}-toggle-button`;
-    this._btn.classList.add("toggle-button", "button");
-    this._btn.addEventListener("click", () => toggleMode(this._vm));
+    this._btn = Button({ classes: "toggle-button button", onClick: () => toggleMode(this._vm) });
   }
 
   appendTo(parent: HTMLElement): void {

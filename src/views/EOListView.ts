@@ -1,4 +1,5 @@
 import { CubeNodeViewModel } from "../viewmodels/CubeNodeViewModel";
+import { Div, Button, Input } from "../utils/ui";
 import {
   addEOEntry,
   selectEO,
@@ -12,6 +13,7 @@ export class EOListView {
   private readonly _vm: CubeNodeViewModel;
   private readonly _id: string;
   private _eoSwitch!: EOSwitchView;
+  private _wrapper: HTMLDivElement | null = null;
   private _onPreview: ((alg: string) => void) | undefined;
 
   constructor(vm: CubeNodeViewModel) {
@@ -25,33 +27,27 @@ export class EOListView {
   }
 
   createListWrapper(): HTMLDivElement {
-    const wrapper = document.createElement("div");
-    wrapper.id = `${this._id}-eo-list-wrapper`;
-    wrapper.className = "eo-list-wrapper";
-    wrapper.style.display = "none";
-
-    wrapper.addEventListener("mouseup", () =>
-      updateTextboxDimensions(this._vm, wrapper.offsetWidth, wrapper.offsetHeight),
-    );
-    wrapper.addEventListener("touchend", () =>
-      updateTextboxDimensions(this._vm, wrapper.offsetWidth, wrapper.offsetHeight),
-    );
-
-    return wrapper;
+    this._wrapper = Div({
+      classes: "eo-list-wrapper",
+      style: { display: "none" },
+      on: {
+        mouseup: () => updateTextboxDimensions(this._vm, this._wrapper!.offsetWidth, this._wrapper!.offsetHeight),
+        touchend: () => updateTextboxDimensions(this._vm, this._wrapper!.offsetWidth, this._wrapper!.offsetHeight),
+      },
+    });
+    return this._wrapper;
   }
 
   toggle(isEO: boolean, textarea: HTMLTextAreaElement, counter: HTMLElement): void {
-    const eoWrap = document.getElementById(`${this._id}-eo-list-wrapper`);
-
     if (isEO) {
       textarea.style.display = "none";
-      if (eoWrap) eoWrap.style.display = "";
+      if (this._wrapper) this._wrapper.style.display = "";
       this._eoSwitch.setChecked(true);
       counter.style.display = "none";
       if (this._vm.eoList.get().length === 0) addEOEntry(this._vm);
     } else {
       textarea.style.display = "";
-      if (eoWrap) eoWrap.style.display = "none";
+      if (this._wrapper) this._wrapper.style.display = "none";
       this._eoSwitch.setChecked(false);
       counter.style.display = "";
     }
@@ -60,9 +56,7 @@ export class EOListView {
   }
 
   render(): void {
-    const wrapper = document.getElementById(
-      `${this._id}-eo-list-wrapper`,
-    ) as HTMLDivElement | null;
+    const wrapper = this._wrapper;
     if (!wrapper) return;
     if (wrapper.querySelector(".eo-edit-input")) return;
     wrapper.innerHTML = "";
@@ -81,11 +75,12 @@ export class EOListView {
 
     for (let rank = 0; rank < indexed.length; rank++) {
       const { eo, idx } = indexed[rank];
-      const row = document.createElement("div");
-      row.classList.add("eo-row");
-      if (idx === selectedIdx) row.style.background = EO_SELECTED_BG;
-      row.textContent = eo || "(Double click to edit)";
-      row.title = eo;
+      const row = Div({
+        classes: "eo-row",
+        text: eo || "(Double click to edit)",
+        title: eo,
+        style: idx === selectedIdx ? { background: EO_SELECTED_BG } : {},
+      });
 
       const capturedRank = rank;
       let clickTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -104,15 +99,11 @@ export class EOListView {
       wrapper.appendChild(row);
     }
 
-    const addRow = document.createElement("div");
-    addRow.className = "eo-add-row";
-    const addBtn = document.createElement("button");
-    addBtn.textContent = "+";
-    addBtn.title = "Add EO";
-    addBtn.className = "eo-add-button";
-    addBtn.addEventListener("click", () => addEOEntry(this._vm));
-    addRow.appendChild(addBtn);
-    wrapper.appendChild(addRow);
+    wrapper.appendChild(
+      Div({ classes: "eo-add-row" },
+        Button({ text: "+", title: "Add EO", classes: "eo-add-button", onClick: () => addEOEntry(this._vm) }),
+      ),
+    );
   }
 
   bindObservables(
@@ -128,10 +119,7 @@ export class EOListView {
   }
 
   private _editRow(idx: number, rank: number, wrapper: HTMLElement): void {
-    const input = document.createElement("input");
-    input.type = "text";
-    input.value = this._vm.eoList.get()[idx] ?? "";
-    input.className = "eo-edit-input";
+    const input = Input({ type: "text", value: this._vm.eoList.get()[idx] ?? "", classes: "eo-edit-input" });
     let cancelled = false;
 
     input.addEventListener("input", () => {
