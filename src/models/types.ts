@@ -41,6 +41,12 @@ export interface TimerSnapshot {
     readonly remainingSeconds: number;
     readonly totalSeconds: number;
     readonly status: TimerStatus;
+    /** Pre-formatted MM:SS string ready for display. */
+    readonly displayTime: string;
+    /** Whether the play/pause button should show "pause" (currently running) or "play". */
+    readonly playPauseState: "play" | "pause";
+    /** Whether the restart button should be visible (timer has been started at least once). */
+    readonly showRestart: boolean;
 }
 
 export const APP_STATE_KEYS = {

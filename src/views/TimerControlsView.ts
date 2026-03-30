@@ -32,8 +32,7 @@ export class TimerControlsView {
   render(snap: TimerSnapshot): void {
     const playSvg = this._playPauseBtn.dataset["playSvg"] ?? "";
     const pauseSvg = this._playPauseBtn.dataset["pauseSvg"] ?? "";
-    this._playPauseBtn.innerHTML = snap.status === "running" ? pauseSvg : playSvg;
-    this._restartBtn.style.display =
-      snap.remainingSeconds < snap.totalSeconds ? "inline-block" : "none";
+    this._playPauseBtn.innerHTML = snap.playPauseState === "pause" ? pauseSvg : playSvg;
+    this._restartBtn.style.display = snap.showRestart ? "inline-block" : "none";
   }
 }

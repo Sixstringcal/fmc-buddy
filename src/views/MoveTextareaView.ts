@@ -9,6 +9,7 @@ import {
   stripComments,
   validMove,
 } from "../utils/moveAlgebra";
+import { applyAutoCloseParen, toggleLineComment } from "../utils/textEditing";
 
 export interface MoveTextareaCallbacks {
   addTargetConnection: (connection: Connection) => void;
@@ -81,21 +82,10 @@ export class MoveTextareaView {
       const cursor = ta.selectionStart;
       const cur = ta.value;
 
-      // Auto-close parentheses
-      if (cursor > 0 && cur.length > previousValue.length && cur[cursor - 1] === "(") {
-        ta.value = cur.slice(0, cursor) + ")" + cur.slice(cursor);
-        ta.selectionStart = ta.selectionEnd = cursor;
-      }
-      // Skip over closing paren if already there
-      if (
-        cursor > 0 &&
-        cur.length > previousValue.length &&
-        cur[cursor - 1] === ")" &&
-        cursor < cur.length &&
-        cur[cursor] === ")"
-      ) {
-        ta.value = cur.slice(0, cursor) + cur.slice(cursor + 1);
-        ta.selectionStart = ta.selectionEnd = cursor;
+      const parenResult = applyAutoCloseParen(cur, cursor, previousValue);
+      if (parenResult) {
+        ta.value = parenResult.newValue;
+        ta.selectionStart = ta.selectionEnd = parenResult.newCursor;
       }
 
       previousValue = ta.value;
@@ -156,32 +146,13 @@ export class MoveTextareaView {
     ta.addEventListener("keydown", (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "/") {
         e.preventDefault();
-        const val = ta.value;
-        const start = ta.selectionStart;
-        const end = ta.selectionEnd;
-        const lines = val.split("\n");
-        const startLine = val.substring(0, start).split("\n").length - 1;
-        const endLine = val.substring(0, end).split("\n").length - 1;
-        const allCommented = lines
-          .slice(startLine, endLine + 1)
-          .every((l) => l.trimStart().startsWith("//"));
-
-        for (let i = startLine; i <= endLine; i++) {
-          if (allCommented) {
-            if (lines[i].trimStart().startsWith("//")) {
-              const indent = lines[i].length - lines[i].trimStart().length;
-              lines[i] = lines[i].substring(0, indent) + lines[i].substring(indent + 2);
-            }
-          } else {
-            lines[i] = "//" + lines[i];
-          }
-        }
-
-        ta.value = lines.join("\n");
-        ta.setSelectionRange(
-          start,
-          end + (allCommented ? -2 : 2) * (endLine - startLine + 1),
+        const { newValue, newStart, newEnd } = toggleLineComment(
+          ta.value,
+          ta.selectionStart,
+          ta.selectionEnd,
         );
+        ta.value = newValue;
+        ta.setSelectionRange(newStart, newEnd);
         ta.dispatchEvent(new Event("input", { bubbles: true }));
       }
     });

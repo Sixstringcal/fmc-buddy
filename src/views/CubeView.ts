@@ -170,18 +170,13 @@ export class CubeView {
     this._vm.isMinimized.subscribe((minimized) =>
       this._renderMinimized(minimized, container),
     );
-    this._vm.rawMoves.subscribe((raw) => {
+    this._vm.previewText.subscribe((text) => {
       if (this._preview && this._vm.isMinimized.get()) {
-        this._preview.textContent = this._previewText(raw);
+        this._preview.textContent = text;
       }
     });
     this._controlsView.bindObservables(container);
     this._inputView.bindObservables(this._controlsView.getMoveCounterElement());
-  }
-
-  private _previewText(raw: string): string {
-    const firstLine = raw.split("\n")[0] ?? "";
-    return firstLine.length > 30 ? firstLine.substring(0, 27) + "..." : firstLine || "(Empty)";
   }
 
   private _renderMinimized(minimized: boolean, container: HTMLElement): void {
@@ -200,7 +195,7 @@ export class CubeView {
         this._preview = Div({ classes: "text-preview", onClick: () => toggleMinimized(this._vm) });
         container.appendChild(this._preview);
       }
-      this._preview.textContent = this._previewText(this._vm.rawMoves.get());
+      this._preview.textContent = this._vm.previewText.get();
       this._preview.style.display = "block";
 
       for (const el of bodyElements) el.style.display = "none";

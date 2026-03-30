@@ -67,10 +67,15 @@ export class TimerViewModel extends ViewModel {
     }
 
     private _buildSnapshot(): TimerSnapshot {
+        const minutes = Math.floor(this._remainingSeconds / 60);
+        const seconds = this._remainingSeconds % 60;
         return {
             remainingSeconds: this._remainingSeconds,
             totalSeconds: this._totalSeconds,
             status: this._status,
+            displayTime: `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`,
+            playPauseState: this._status === "running" ? "pause" : "play",
+            showRestart: this._remainingSeconds < this._totalSeconds,
         };
     }
 

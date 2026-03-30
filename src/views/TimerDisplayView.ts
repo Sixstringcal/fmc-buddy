@@ -13,8 +13,6 @@ export class TimerDisplayView {
   }
 
   render(snap: TimerSnapshot): void {
-    const minutes = Math.floor(snap.remainingSeconds / 60);
-    const seconds = snap.remainingSeconds % 60;
-    this._span.textContent = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    this._span.textContent = snap.displayTime;
   }
 }

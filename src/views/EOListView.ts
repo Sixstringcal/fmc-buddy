@@ -62,16 +62,8 @@ export class EOListView {
     wrapper.innerHTML = "";
     if (!this._vm.isEOView.get()) return;
 
-    const eoList = this._vm.eoList.get();
+    const indexed = this._vm.sortedEOList.get();
     const selectedIdx = this._vm.selectedEOIndex.get();
-
-    const indexed = eoList
-      .map((eo, idx) => ({ eo, idx }))
-      .sort((a, b) => {
-        const ca = this._countMoves(a.eo);
-        const cb = this._countMoves(b.eo);
-        return ca !== cb ? ca - cb : a.idx - b.idx;
-      });
 
     for (let rank = 0; rank < indexed.length; rank++) {
       const { eo, idx } = indexed[rank];
@@ -114,7 +106,7 @@ export class EOListView {
     this._onPreview = onPreview;
     this._vm.isEOView.subscribe((isEO) => this.toggle(isEO, textarea, counter));
     const renderEO = () => this.render();
-    this._vm.eoList.subscribe(renderEO);
+    this._vm.sortedEOList.subscribe(renderEO);
     this._vm.selectedEOIndex.subscribe(renderEO);
   }
 
@@ -144,11 +136,5 @@ export class EOListView {
     const rows = wrapper.querySelectorAll(".eo-row");
     if (rows[rank]) wrapper.replaceChild(input, rows[rank]);
     input.focus();
-  }
-
-  private _countMoves(eo: string): number {
-    const COUNTABLE = /^(R|L|F|B|U|D|Rw|Lw|Fw|Bw|Uw|Dw)(2|'|w2|w')?$/;
-    if (!eo.trim()) return 0;
-    return eo.split(/\s+/).filter((t) => COUNTABLE.test(t)).length;
   }
 }

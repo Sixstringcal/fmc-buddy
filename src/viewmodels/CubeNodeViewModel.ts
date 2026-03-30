@@ -10,6 +10,11 @@ import {
     validMove,
 } from "../utils/moveAlgebra";
 
+export interface SortedEOEntry {
+    eo: string;
+    idx: number;
+}
+
 export class CubeNodeViewModel extends ViewModel {
     readonly id: string;
     readonly scramble: Observable<string>;
@@ -29,6 +34,12 @@ export class CubeNodeViewModel extends ViewModel {
 
     /** The full alg string to feed the TwistyPlayer. */
     readonly playerAlg = new Observable<string>("");
+
+    /** Truncated first line of rawMoves for the minimized preview. */
+    readonly previewText = new Observable<string>("(Empty)");
+
+    /** eoList entries sorted ascending by move count, with original indices. */
+    readonly sortedEOList = new Observable<SortedEOEntry[]>([]);
 
     constructor(
         id: string,
@@ -93,6 +104,25 @@ export class CubeNodeViewModel extends ViewModel {
 
         this.playerAlg.set(alg);
         this.moveCount.set(countMoves(cleaned));
+
+        // Preview text for the minimized card (based on rawMoves, not EO)
+        const firstLine = this.rawMoves.get().split("\n")[0] ?? "";
+        this.previewText.set(
+            firstLine.length > 30
+                ? firstLine.substring(0, 27) + "..."
+                : firstLine || "(Empty)",
+        );
+
+        // EO list sorted by move count (stable: ties keep original index order)
+        const eoList = this.eoList.get();
+        const sorted = eoList
+            .map((eo, idx): SortedEOEntry => ({ eo, idx }))
+            .sort((a, b) => {
+                const ca = countMoves(a.eo);
+                const cb = countMoves(b.eo);
+                return ca !== cb ? ca - cb : a.idx - b.idx;
+            });
+        this.sortedEOList.set(sorted);
     }
 
     private _buildAlg(cleanedMoves: string): string {
