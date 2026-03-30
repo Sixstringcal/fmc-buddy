@@ -1,218 +1,197 @@
-import { randomScrambleForEvent } from "cubing/scramble";
-import { CubeView } from "./CubeView";
-import { Timer } from "./Timer";
+import { AppViewModel } from "./viewmodels/AppViewModel";
 import { ScrambleView } from "./ScrambleView";
-import { loadState, saveState, clearLocalStorage } from "./stateManager";
+import { Timer } from "./Timer";
+import { CubeView } from "./CubeView";
+import { generateNewScramble } from "./actions/scrambleActions";
+import { throttle } from "./utils/throttle";
+import { AppRepository } from "./repositories/AppRepository";
+import { ConnectionRecord } from "./models/types";
 
-let scramble: string = "";
-let cubeViewCount = 0;
-const cubeViews: CubeView[] = [];
-let scrambleView: ScrambleView;
+window.addEventListener("DOMContentLoaded", () => {
+    initializeApp().catch((err) => {
+        console.error("initializeApp failed:", err);
+        document.body.innerHTML = `
+      <div style="padding:2rem;font-family:monospace;color:red;">
+        <h2>App failed to start</h2>
+        <pre>${String(err?.stack ?? err)}</pre>
+      </div>`;
+    });
+});
 
-function throttle(func: Function, delay: number): (...args: any[]) => void {
-    let lastCall = 0;
-    return function(...args: any[]) {
-        const now = Date.now();
-        if (now - lastCall >= delay) {
-            lastCall = now;
-            func(...args);
+async function initializeApp(): Promise<void> {
+    const loading = createLoadingOverlay();
+    const appVm = new AppViewModel();
+    const scrambleView = new ScrambleView("");
+    scrambleView.bindViewModel(appVm.scrambleVm);
+    scrambleView.initialize();
+
+    await appVm.bootstrap();
+    if (!appVm.scrambleVm.scramble.get().trim()) {
+        await generateNewScramble(appVm.scrambleVm);
+    }
+
+    const timer = new Timer(60 * 60, () => alert("Time's up!"));
+    const timerEl = timer.getElement();
+    timerEl.classList.add("fixed-timer");
+    document.body.appendChild(timerEl);
+
+    const addButton = document.createElement("button");
+    addButton.textContent = "+";
+    addButton.classList.add("add-button");
+    addButton.addEventListener("click", () => spawnNewNode(appVm));
+    document.body.appendChild(addButton);
+
+    const cubeViews: CubeView[] = [];
+
+    if (appVm.cubeNodes.get().length > 0) {
+        for (const vm of appVm.cubeNodes.get()) {
+            const view = new CubeView(appVm, vm);
+            view.initialize();
+            cubeViews.push(view);
         }
-    };
+    } else {
+        cubeViews.push(spawnNewNode(appVm));
+    }
+
+    restoreConnections(appVm, cubeViews);
+    CubeView.markConnectionsLoaded();
+
+    for (const view of cubeViews) {
+        try {
+            view.forceUpdateConnections();
+        } catch (e) {
+            console.error("Error updating connections:", e);
+        }
+    }
+
+    appVm.scrambleVm.scramble.subscribe((_scramble) => { });
+
+    // Patch: override the refresh button behaviour to do a full reset.
+    patchScrambleRefresh(appVm, cubeViews);
+
+    // ── Layout ─────────────────────────────────────────────────────────────────
+
+    updateDocumentBoundaries();
+    const throttledUpdate = throttle(updateDocumentBoundaries, 100);
+    window.addEventListener("resize", throttledUpdate);
+    window.addEventListener("scroll", throttledUpdate);
+    window.addEventListener("load", updateDocumentBoundaries);
+
+    hideLoadingOverlay(loading);
 }
 
-function createLoadingOverlay() {
-    const overlay = document.createElement('div');
-    overlay.id = 'loading-overlay';
-    
-    const spinner = document.createElement('div');
-    spinner.classList.add('loading-spinner');
-    
-    const text = document.createElement('p');
-    text.textContent = 'Loading...';
-    
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function spawnNewNode(appVm: AppViewModel): CubeView {
+    const vm = appVm.createCubeNode();
+    const view = new CubeView(appVm, vm);
+    view.initialize();
+
+    // Position it away from existing nodes
+    requestAnimationFrame(() => {
+        const container = document.getElementById(vm.id);
+        if (container) {
+            const nodeCount = appVm.cubeNodes.get().length;
+            if (!container.style.left) {
+                container.style.left = `${100 + nodeCount * 20}px`;
+                container.style.top = `${100 + nodeCount * 20}px`;
+            }
+            updateDocumentBoundaries();
+        }
+    });
+
+    return view;
+}
+
+function restoreConnections(
+    appVm: AppViewModel,
+    views: CubeView[],
+): void {
+    const connections: ConnectionRecord[] = AppRepository.loadConnections();
+    if (connections.length === 0) return;
+
+    const allIds = new Set(
+        Array.from(document.querySelectorAll(".cube-container")).map((el) => el.id),
+    );
+
+    for (const { sourceId, targetId } of connections) {
+        if (!allIds.has(sourceId) || !allIds.has(targetId)) {
+            console.warn(`Skipping connection restore: ${sourceId} → ${targetId}`);
+            continue;
+        }
+        const sourceView = views.find((v) => v.getContainerId() === sourceId);
+        sourceView?.createConnectionFromState(targetId);
+    }
+
+    for (const view of views) {
+        view.initializeConnections();
+    }
+}
+
+function patchScrambleRefresh(
+    appVm: AppViewModel,
+    cubeViews: CubeView[],
+): void {
+    const btn = document.querySelector<HTMLButtonElement>(".new-scramble-button");
+    if (!btn) return;
+
+    const clone = btn.cloneNode(true) as HTMLButtonElement;
+    btn.replaceWith(clone);
+
+    clone.addEventListener("click", async () => {
+        if (!confirm("Are you sure you want to restart?")) return;
+
+        for (const view of cubeViews) {
+            const container = document.getElementById(view.getContainerId());
+            container?.remove();
+        }
+        document.querySelectorAll(".connection-line, .connection-arrow").forEach(
+            (el) => el.remove(),
+        );
+        cubeViews.length = 0;
+
+        appVm.reset();
+
+        const { generateNewScramble: gen } = await import("./actions/scrambleActions");
+        await gen(appVm.scrambleVm);
+
+        cubeViews.push(spawnNewNode(appVm));
+        CubeView.markConnectionsLoaded();
+    });
+}
+
+function createLoadingOverlay(): HTMLElement {
+    const overlay = document.createElement("div");
+    overlay.id = "loading-overlay";
+
+    const spinner = document.createElement("div");
+    spinner.classList.add("loading-spinner");
+
+    const text = document.createElement("p");
+    text.textContent = "Loading...";
+
     overlay.appendChild(spinner);
     overlay.appendChild(text);
     document.body.appendChild(overlay);
-    
     return overlay;
 }
 
-function hideLoadingOverlay() {
-    const overlay = document.getElementById('loading-overlay');
-    if (overlay) {
-        overlay.style.opacity = '0';
-        setTimeout(() => {
-            overlay.remove();
-        }, 101); 
-    }
+function hideLoadingOverlay(overlay: HTMLElement): void {
+    overlay.style.opacity = "0";
+    setTimeout(() => overlay.remove(), 101);
 }
 
-function initializeApp() {
-    (async () => {
-        const loadingOverlay = createLoadingOverlay();
-
-        const documentContainer = document.createElement('div');
-        documentContainer.id = 'document-container';
-        documentContainer.className = 'document-container';
-        document.body.appendChild(documentContainer);
-
-        scrambleView = new ScrambleView("");
-        scrambleView.initialize();
-        
-        scrambleView.onRefreshScramble(refreshScramble);
-
-        scramble = loadState("scramble", "");
-        if (scramble.trim() === "") {
-            scramble = (await randomScrambleForEvent("333fm")).toString();
-        }
-        scrambleView.updateScramble(scramble);
-
-        const timer = new Timer(60 * 60, () => {
-            alert("Time's up!");
-        });
-
-        const timerElement = timer.getElement();
-        timerElement.classList.add("fixed-timer");
-        document.body.appendChild(timerElement);
-
-        const addButton = document.createElement("button");
-        addButton.textContent = "+";
-        addButton.classList.add("add-button");
-        addButton.addEventListener("click", () => {
-            createNewCubeView();
-        });
-        document.body.appendChild(addButton);
-
-        await loadSavedCubeViews(scrambleView);
-
-        if (cubeViews.length === 0) {
-            createNewCubeView();
-        }
-
-        restoreConnections();
-        
-        CubeView.markConnectionsLoaded();
-        cubeViews.forEach(view => {
-            try {
-                view.forceUpdateConnections();
-            } catch (e) {
-                console.error(`Error updating connections for ${view.getContainerId()}:`, e);
-            }
-        });
-        
-        hideLoadingOverlay();
-
-        updateDocumentBoundaries();
-        
-        const throttledUpdateBoundaries = throttle(updateDocumentBoundaries, 100);
-        window.addEventListener('resize', throttledUpdateBoundaries);
-        window.addEventListener('scroll', throttledUpdateBoundaries);
-        window.addEventListener('load', updateDocumentBoundaries);
-    })();
-}
-
-window.addEventListener('DOMContentLoaded', () => {
-    initializeApp();
-});
-
-async function refreshScramble() {
-    clearLocalStorage();
-    
-    scramble = (await randomScrambleForEvent("333fm")).toString();
-    
-    scrambleView.updateScramble(scramble);
-    
-    cubeViews.length = 0;
-    cubeViewCount = 0;
-    
-    createNewCubeView();
-}
-
-async function loadSavedCubeViews(scrambleView: ScrambleView) {
-    const savedCount = loadState<number>("cubeViewCount", 0);
-    const savedViewIds = loadState<string[]>("cubeViewIds", []);
-    
-    cubeViewCount = Math.max(savedCount, 0);
-    
-    for (const viewId of savedViewIds) {
-        const viewState = loadState(`cubeView_${viewId}`, null);
-        if (viewState) {
-            const cubeView = new CubeView(scramble, viewId, viewState);
-            cubeView.initialize();
-            cubeViews.push(cubeView);
-            scrambleView.registerCubeView(cubeView);
-        }
-    }
-}
-
-function restoreConnections() {
-    const connections = loadState<{sourceId: string, targetId: string}[]>("cubeViewConnections", []);
-    
-    sessionStorage.setItem('connectionsBackup', JSON.stringify(connections));
-    
-    if (connections.length === 0) {
-        CubeView.markConnectionsLoaded();
-        return;
-    }
-    
-    const allContainers = document.querySelectorAll('.cube-container');
-    const containerIds = Array.from(allContainers).map(c => c.id);
-    
-    for (const connection of connections) {
-        if (!containerIds.includes(connection.sourceId) || !containerIds.includes(connection.targetId)) {
-            console.warn(`Cannot restore connection: ${connection.sourceId} -> ${connection.targetId} (container not found)`);
-            continue;
-        }
-        
-        const sourceView = cubeViews.find(view => view.getContainerId() === connection.sourceId);
-        if (sourceView) {
-            sourceView.createConnectionFromState(connection.targetId);
-        } else {
-            console.warn(`Source view not found: ${connection.sourceId}`);
-        }
-    }
-    
-    cubeViews.forEach(view => {
-        view.initializeConnections();
-    });
-}
-
-function createNewCubeView() {
-    cubeViewCount++;
-    const containerId = `cube-container-${cubeViewCount}`;
-    const cubeView = new CubeView(scramble, containerId);
-    cubeView.initialize();
-    cubeViews.push(cubeView);
-    
-    requestAnimationFrame(() => {
-        const newCubeContainer = document.getElementById(containerId);
-        if (newCubeContainer) {
-            if (!newCubeContainer.style.left || !newCubeContainer.style.top) {
-                newCubeContainer.style.left = `${100 + (cubeViewCount * 20)}px`;
-                newCubeContainer.style.top = `${100 + (cubeViewCount * 20)}px`;
-            }
-            updateDocumentBoundaries();
-            cubeView.saveState();
-        }
-    });
-}
-
-function updateDocumentBoundaries() {
-    const containers = document.querySelectorAll('.cube-container');
+function updateDocumentBoundaries(): void {
+    const containers = document.querySelectorAll<HTMLElement>(".cube-container");
     let maxRight = window.innerWidth;
     let maxBottom = window.innerHeight;
-    
-    containers.forEach(container => {
-        const el = container as HTMLElement;
-        const rect = el.getBoundingClientRect();
-        
-        const right = rect.right + window.scrollX + 300;
-        const bottom = rect.bottom + window.scrollY + 300;
-        
-        maxRight = Math.max(maxRight, right);
-        maxBottom = Math.max(maxBottom, bottom);
-    });
-    
+
+    for (const el of Array.from(containers)) {
+        const r = el.getBoundingClientRect();
+        maxRight = Math.max(maxRight, r.right + window.scrollX + 300);
+        maxBottom = Math.max(maxBottom, r.bottom + window.scrollY + 300);
+    }
+
     document.documentElement.style.minWidth = `${maxRight}px`;
     document.documentElement.style.minHeight = `${maxBottom}px`;
     document.body.style.minWidth = `${maxRight}px`;

@@ -355,7 +355,6 @@ body {
 .timer-button svg {
   width: 20px;
   height: 20px;
-  fill: white;
 }
 
 .new-scramble-button {
@@ -372,6 +371,9 @@ body {
   position: absolute;
   top: 5px;
   left: 5px;
+  color: #007bff;
+  font-size: 1.4rem;
+  z-index: 10;
   transition: background-color 0.3s ease;
 }
 
@@ -382,13 +384,12 @@ body {
 .new-scramble-button svg {
   display: block;
   margin: auto;
-  fill: #007bff;
   width: 24px;
   height: 24px;
 }
 
 .new-scramble-button:hover svg {
-  fill: #0056b3;
+  color: #0056b3;
 }
 
 .minimize-button,

@@ -1,152 +1,98 @@
+import { TimerViewModel } from "./viewmodels/TimerViewModel";
+import { toggleTimer, resetTimer } from "./actions/timerActions";
+import { TimerSnapshot } from "./models/types";
+import { loadSvg } from "./utils/svgLoader";
+
 export class Timer {
-    private timerContainer: HTMLElement;
-    private timerDisplay: HTMLElement;
-    private timerButton: HTMLButtonElement;
-    private restartButton: HTMLButtonElement;
-    private remainingTime: number;
-    private timerInterval: NodeJS.Timeout | null = null;
-    private isRunning: boolean = false;
+    private readonly _vm: TimerViewModel;
+    private _container!: HTMLElement;
+    private _display!: HTMLElement;
+    private _playPauseBtn!: HTMLButtonElement;
+    private _restartBtn!: HTMLButtonElement;
 
-    constructor(private duration: number, private onComplete?: () => void) {
-        this.remainingTime = duration;
+    constructor(private readonly duration: number, private readonly onComplete?: () => void) {
+        this._vm = new TimerViewModel(duration);
+        this._vm.onExpired = onComplete ?? null;
+        this._buildDOM();
+        this._loadIcons().then(() => this._bindObservables());
 
-        this.timerContainer = document.createElement("div");
-        this.timerContainer.id = "countdown-timer";
-        this.timerContainer.classList.add("countdown-timer");
-
-        this.timerDisplay = document.createElement("span");
-        this.timerDisplay.id = "timer-display";
-        this.timerContainer.appendChild(this.timerDisplay);
-
-        this.timerButton = document.createElement("button");
-        this.timerButton.id = "timer-button";
-        this.timerButton.classList.add("timer-button");
-        this.timerContainer.appendChild(this.timerButton);
-
-        this.restartButton = document.createElement("button");
-        this.restartButton.id = "restart-button";
-        this.restartButton.classList.add("timer-button");
-        this.restartButton.style.display = "none";
-        this.timerContainer.appendChild(this.restartButton);
-
-        document.body.appendChild(this.timerContainer);
-
-        this.initialize();
-
-        this.positionTimerBelowScramble();
-
-        window.addEventListener('resize', () => {
-            this.positionTimerBelowScramble();
-        });
-    }
-    public getElement(): HTMLElement {
-        return this.timerContainer;
-    }
-    private async initialize() {
-        this.timerButton.innerHTML = await this.loadSvg("/assets/play.svg");
-        this.restartButton.innerHTML = await this.loadSvg("/assets/restart.svg");
-
-        this.timerButton.addEventListener("click", () => this.toggleTimer());
-        this.restartButton.addEventListener("click", () => this.resetTimer());
-
-        this.updateTimerDisplay();
+        this._positionBelowScramble();
+        window.addEventListener("resize", () => this._positionBelowScramble());
     }
 
-    private async loadSvg(path: string): Promise<string> {
-        const response = await fetch(path);
-        if (!response.ok) {
-            throw new Error(`Failed to load SVG: ${path}`);
-        }
-        return await response.text();
+    getElement(): HTMLElement {
+        return this._container;
     }
 
-    private updateTimerDisplay() {
-        const minutes = Math.floor(this.remainingTime / 60);
-        const seconds = this.remainingTime % 60;
-        this.timerDisplay.textContent = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    private _buildDOM(): void {
+        this._container = document.createElement("div");
+        this._container.id = "countdown-timer";
+        this._container.classList.add("countdown-timer");
 
-        this.restartButton.style.display = this.remainingTime < this.duration ? "inline-block" : "none";
+        this._display = document.createElement("span");
+        this._display.id = "timer-display";
+        this._container.appendChild(this._display);
 
-        if (this.remainingTime === 0 && this.timerInterval) {
-            clearInterval(this.timerInterval);
-            this.timerInterval = null;
-            this.isRunning = false;
-            this.loadSvg("/assets/play.svg").then((svg) => {
-                this.timerButton.innerHTML = svg;
-            });
-            if (this.onComplete) {
-                this.onComplete();
-            }
-        }
+        this._playPauseBtn = document.createElement("button");
+        this._playPauseBtn.id = "timer-button";
+        this._playPauseBtn.classList.add("timer-button");
+        this._playPauseBtn.addEventListener("click", () => toggleTimer(this._vm));
+        this._container.appendChild(this._playPauseBtn);
+
+        this._restartBtn = document.createElement("button");
+        this._restartBtn.id = "restart-button";
+        this._restartBtn.classList.add("timer-button");
+        this._restartBtn.style.display = "none";
+        this._restartBtn.addEventListener("click", () => resetTimer(this._vm));
+        this._container.appendChild(this._restartBtn);
     }
 
-    private toggleTimer() {
-        if (this.isRunning) {
-            this.pauseTimer();
-        } else {
-            this.startTimer();
-        }
+    private async _loadIcons(): Promise<void> {
+        const [playSvg, pauseSvg, restartSvg] = await Promise.all([
+            loadSvg("/assets/play.svg"),
+            loadSvg("/assets/pause.svg"),
+            loadSvg("/assets/restart.svg"),
+        ]);
+
+        this._playPauseBtn.dataset["playSvg"] = playSvg;
+        this._playPauseBtn.dataset["pauseSvg"] = pauseSvg;
+        this._restartBtn.innerHTML = restartSvg;
+        this._render(this._vm.snapshot.get());
     }
 
-    private startTimer() {
-        if (!this.timerInterval) {
-            this.timerInterval = setInterval(() => {
-                if (this.remainingTime > 0) {
-                    this.remainingTime--;
-                    this.updateTimerDisplay();
-                }
-            }, 1000);
-        }
-        this.isRunning = true;
-        this.loadSvg("/assets/pause.svg").then((svg) => {
-            this.timerButton.innerHTML = svg;
-        });
+    private _bindObservables(): void {
+        this._vm.snapshot.subscribe((snap) => this._render(snap));
     }
 
-    private pauseTimer() {
-        if (this.timerInterval) {
-            clearInterval(this.timerInterval);
-            this.timerInterval = null;
-        }
-        this.isRunning = false;
-        this.loadSvg("/assets/play.svg").then((svg) => {
-            this.timerButton.innerHTML = svg;
-        });
+    private _render(snap: TimerSnapshot): void {
+        const minutes = Math.floor(snap.remainingSeconds / 60);
+        const seconds = snap.remainingSeconds % 60;
+        this._display.textContent = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+
+        const playSvg = this._playPauseBtn.dataset["playSvg"] ?? "";
+        const pauseSvg = this._playPauseBtn.dataset["pauseSvg"] ?? "";
+        this._playPauseBtn.innerHTML = snap.status === "running" ? pauseSvg : playSvg;
+
+        this._restartBtn.style.display =
+            snap.remainingSeconds < snap.totalSeconds ? "inline-block" : "none";
     }
 
-    private resetTimer() {
-        if (this.timerInterval) {
-            clearInterval(this.timerInterval);
-            this.timerInterval = null;
-        }
-        this.isRunning = false;
-        this.remainingTime = this.duration;
-        this.updateTimerDisplay();
-        this.loadSvg("/assets/play.svg").then((svg) => {
-            this.timerButton.innerHTML = svg;
-        });
-    }
+    private _positionBelowScramble(): void {
+        const scramble = document.getElementById("scramble-container");
+        if (!scramble) return;
 
-    private positionTimerBelowScramble() {
-        const scrambleContainer = document.getElementById('scramble-container');
+        const sr = scramble.getBoundingClientRect();
+        const tr = this._container.getBoundingClientRect();
 
-        if (scrambleContainer) {
-            const scrambleRect = scrambleContainer.getBoundingClientRect();
-            const timerRect = this.timerContainer.getBoundingClientRect();
+        const overlapping = !(
+            tr.top > sr.bottom ||
+            tr.right < sr.left ||
+            tr.bottom < sr.top ||
+            tr.left > sr.right
+        );
 
-            const overlapping = !(
-                timerRect.top > scrambleRect.bottom ||
-                timerRect.right < scrambleRect.left ||
-                timerRect.bottom < scrambleRect.top ||
-                timerRect.left > scrambleRect.right
-            );
-
-            if (overlapping) {
-                const marginTop = scrambleRect.height + 10;
-                this.timerContainer.style.marginTop = `${marginTop}px`;
-            } else {
-                this.timerContainer.style.marginTop = '0px';
-            }
-        }
+        this._container.style.marginTop = overlapping
+            ? `${sr.height + 10}px`
+            : "0px";
     }
 }
