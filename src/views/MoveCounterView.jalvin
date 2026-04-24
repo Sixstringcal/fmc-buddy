@@ -1,0 +1,21 @@
+import @jalvin/runtime.*
+import src.viewmodels.CubeNodeViewModel
+import src.models.css.Css
+import src.models.types.MoveCounterText
+import src.utils.ui.Div
+
+component fun MoveCounter(vm: CubeNodeViewModel) {
+    val moveCount = mutableStateOf(vm.moveCount.get())
+
+    DisposableEffect(listOf(vm.moveCount)) {
+        val unsub = vm.moveCount.subscribe { count ->
+            moveCount.value = count
+        }
+        { unsub() }
+    }
+
+    Div(
+        classes = Css.MoveCounter,
+        text = "\${MoveCounterText.Prefix}\${moveCount.value}"
+    )
+}

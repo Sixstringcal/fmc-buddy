@@ -1,0 +1,51 @@
+import @jalvin/runtime.*
+import src.viewmodels.CubeNodeViewModel
+import src.actions.cubeNodeActions.markAsGood
+import src.actions.cubeNodeActions.markAsBad
+import src.models.css.Css
+import src.models.types.BgColor
+import src.models.types.RatingIcon
+import src.consts.Spacing
+import src.utils.ui.Row
+import src.utils.ui.Button
+
+component fun RatingButtons(vm: CubeNodeViewModel) {
+    val isGood = mutableStateOf(vm.isGood.get())
+
+    DisposableEffect(listOf(vm.isGood)) {
+        val unsub = vm.isGood.subscribe { good ->
+            isGood.value = good
+        }
+        { unsub() }
+    }
+
+    // Side effect to update the container background color
+    SideEffect {
+        val container = document.getElementById(vm.id)
+        if (container != null) {
+            container.style.backgroundColor = when (isGood.value) {
+                true -> BgColor.Good
+                false -> BgColor.Bad
+                else -> BgColor.None
+            }
+        }
+    }
+
+    Row(
+        classes = Css.RatingWrapper,
+        justify = "center",
+        style = "margin-top: \${Spacing.MD}"
+    ) {
+        Button(
+            html = RatingIcon.ThumbsUp,
+            classes = "\${Css.RatingButton} \${Css.ThumbsUp} \${if (isGood.value == true) Css.Active else ""}",
+            style = "margin-right: \${Spacing.MD}",
+            onClick = { markAsGood(vm) }
+        )
+        Button(
+            html = RatingIcon.ThumbsDown,
+            classes = "\${Css.RatingButton} \${Css.ThumbsDown} \${if (isGood.value == false) Css.Active else ""}",
+            onClick = { markAsBad(vm) }
+        )
+    }
+}

@@ -1,0 +1,13 @@
+import @jalvin/runtime.*
+import src.viewmodels.CubeNodeViewModel
+import src.views.MoveCounterView.MoveCounter
+import src.views.ModeToggleView.ModeToggle
+import src.views.RotationButtonsView.RotationButtons
+import src.views.RatingButtonsView.RatingButtons
+
+component fun CubeControls(vm: CubeNodeViewModel) {
+    MoveCounter(vm)
+    ModeToggle(vm)
+    RotationButtons(vm)
+    RatingButtons(vm)
+}
