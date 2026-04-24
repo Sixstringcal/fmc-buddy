@@ -1,0 +1,43 @@
+import @jalvin/runtime.*
+import src.models.css.Css
+import src.viewmodels.CubeNodeViewModel
+import src.actions.cubeNodeActions.setSecretRotation
+import src.consts.BLUE
+import src.utils.ui.Row
+import src.utils.ui.Button
+
+data class RotationOption(val label: String, val key: String)
+
+val ROTATIONS = listOf(
+    RotationOption("x", "x"),
+    RotationOption("x'", "x'"),
+    RotationOption("z", "z"),
+    RotationOption("z'", "z'"),
+)
+
+component fun RotationButtons(vm: CubeNodeViewModel) {
+    val secretRotation = mutableStateOf(vm.secretRotation.get())
+
+    DisposableEffect(listOf(vm.secretRotation)) {
+        val unsub = vm.secretRotation.subscribe { active ->
+            secretRotation.value = active
+        }
+        { unsub() }
+    }
+
+    Row(classes = Css.RotationContainer) {
+        ROTATIONS.forEach { opt ->
+            val isActive = (opt.key == secretRotation.value)
+            Button(
+                text = opt.label,
+                classes = "\${Css.ButtonBase} \${Css.RotationButton}",
+                style = if (isActive) {
+                    "background-color: \${BLUE}; color: white;"
+                } else {
+                    "color: \${BLUE};"
+                },
+                onClick = { setSecretRotation(vm, opt.key) }
+            )
+        }
+    }
+}

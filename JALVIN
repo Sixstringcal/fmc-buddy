@@ -1,0 +1,6 @@
+name        = fmc-buddy
+version     = 0.1.0
+rootDir     = src
+outDir      = dist-jalvin
+jsx         = true
+emitTypes   = true
