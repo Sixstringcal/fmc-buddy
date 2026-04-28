@@ -1,4 +1,3 @@
-import @jalvin/runtime.*
 import src.viewmodels.CubeNodeViewModel
 import src.actions.cubeNodeActions.markAsGood
 import src.actions.cubeNodeActions.markAsBad
@@ -6,46 +5,54 @@ import src.models.css.Css
 import src.models.types.BgColor
 import src.models.types.RatingIcon
 import src.consts.Spacing
-import src.utils.ui.Row
-import src.utils.ui.Button
+import @jalvin/ui.Row
+import @jalvin/ui.Button
+import @jalvin/ui.Modifier
 
-component fun RatingButtons(vm: CubeNodeViewModel) {
-    val isGood = mutableStateOf(vm.isGood.get())
+class RatingButtonsView {
+    private var _vm: CubeNodeViewModel
+    private var _upBtn: HTMLButtonElement
+    private var _dnBtn: HTMLButtonElement
+    private var _wrapper: HTMLElement
 
-    DisposableEffect(listOf(vm.isGood)) {
-        val unsub = vm.isGood.subscribe { good ->
-            isGood.value = good
+    constructor(vm: CubeNodeViewModel) {
+        this._vm = vm
+        this._upBtn = Button(
+            innerHTML = RatingIcon.ThumbsUp,
+            modifier = Modifier.className("${Css.RatingButton} ${Css.ThumbsUp}").marginRight(Spacing.MD),
+            onClick = { markAsGood(this._vm) }
+        )
+        this._dnBtn = Button(
+            innerHTML = RatingIcon.ThumbsDown,
+            modifier = Modifier.className("${Css.RatingButton} ${Css.ThumbsDown}"),
+            onClick = { markAsBad(this._vm) }
+        )
+        this._wrapper = Row(
+            modifier = Modifier.className(Css.RatingWrapper).marginTop(Spacing.MD),
+            horizontalArrangement = "center"
+        ) {
+            this._upBtn
+            this._dnBtn
         }
-        { unsub() }
     }
 
-    // Side effect to update the container background color
-    SideEffect {
-        val container = document.getElementById(vm.id)
-        if (container != null) {
-            container.style.backgroundColor = when (isGood.value) {
-                true -> BgColor.Good
-                false -> BgColor.Bad
-                else -> BgColor.None
+    fun appendTo(parent: HTMLElement) {
+        parent.appendChild(this._wrapper)
+    }
+
+    fun bindObservables(container: HTMLElement) {
+        this._vm.isGood.subscribe { good ->
+            this._upBtn.classList.remove(Css.Active)
+            this._dnBtn.classList.remove(Css.Active)
+            if (good === true) {
+                container.style.backgroundColor = BgColor.Good
+                this._upBtn.classList.add(Css.Active)
+            } else if (good === false) {
+                container.style.backgroundColor = BgColor.Bad
+                this._dnBtn.classList.add(Css.Active)
+            } else {
+                container.style.backgroundColor = BgColor.None
             }
         }
-    }
-
-    Row(
-        classes = Css.RatingWrapper,
-        justify = "center",
-        style = "margin-top: \${Spacing.MD}"
-    ) {
-        Button(
-            html = RatingIcon.ThumbsUp,
-            classes = "\${Css.RatingButton} \${Css.ThumbsUp} \${if (isGood.value == true) Css.Active else ""}",
-            style = "margin-right: \${Spacing.MD}",
-            onClick = { markAsGood(vm) }
-        )
-        Button(
-            html = RatingIcon.ThumbsDown,
-            classes = "\${Css.RatingButton} \${Css.ThumbsDown} \${if (isGood.value == false) Css.Active else ""}",
-            onClick = { markAsBad(vm) }
-        )
     }
 }
