@@ -15,9 +15,9 @@ class RotationButtonsViewModel(val cubeNodeVm: CubeNodeViewModel) : ViewModel() 
     fun onRotationSelected(rotation: Rotation) {
         val current = this._uiState.value.activeRotation
         val next = if (current == rotation) Rotation.None else rotation
-        
+
         this._uiState.value = RotationButtonsState(next)
-        
+
         // Sync the change to the core logic
         setSecretRotation(this.cubeNodeVm, next.value)
     }

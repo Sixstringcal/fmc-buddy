@@ -21,7 +21,7 @@ component fun RatingButtons(vm: CubeNodeViewModel) {
         Button(
             text = RatingIcon.ThumbsUp,
             modifier = Modifier.className("${Css.RatingButton} ${Css.ThumbsUp} ${if (isGood == true) Css.Active else ""}")
-                               .marginRight(Spacing.MD),
+                .marginRight(Spacing.MD),
             onClick = { markAsGood(vm) }
         )
         Button(

@@ -11,10 +11,10 @@ import src.views.RotationButtonsView.RotationButtons
 import src.views.RatingButtonsView.RatingButtons
 
 component fun CubeControlsView(vm: CubeNodeViewModel) {
-    val rotationVm = useViewModel("RotationVm-${vm.id}", { 
-        RotationButtonsViewModel(vm) 
+    val rotationVm = useViewModel("RotationVm-${vm.id}", {
+            RotationButtonsViewModel(vm)
     })
-    
+
     Column(modifier = Modifier.fillMaxWidth()) {
         MoveCounter(vm)
         ModeToggle(vm)

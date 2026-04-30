@@ -19,8 +19,8 @@ component fun ModeToggle(vm: CubeNodeViewModel) {
     Button(
         text = if (isNormal) ModeText.Normal else ModeText.Inverse,
         modifier = Modifier.className("${Css.ButtonBase} ${Css.ToggleButton}")
-                           .background(if (isNormal) BLUE else ORANGE)
-                           .color("white"),
+            .background(if (isNormal) BLUE else ORANGE)
+            .color("white"),
         onClick = { toggleMode(vm) }
     )
 }

@@ -19,25 +19,25 @@ component fun RotationButtons(vm: RotationButtonsViewModel) {
         Button(
             text = "x",
             modifier = Modifier.className(Css.RotationButton)
-                               .className(if (state.activeRotation == Rotation.X) Css.Active else ""),
+                .className(if (state.activeRotation == Rotation.X) Css.Active else ""),
             onClick = { vm.onRotationSelected(Rotation.X) }
         )
         Button(
             text = "x'",
             modifier = Modifier.className(Css.RotationButton)
-                               .className(if (state.activeRotation == Rotation.Xi) Css.Active else ""),
+                .className(if (state.activeRotation == Rotation.Xi) Css.Active else ""),
             onClick = { vm.onRotationSelected(Rotation.Xi) }
         )
         Button(
             text = "z",
             modifier = Modifier.className(Css.RotationButton)
-                               .className(if (state.activeRotation == Rotation.Z) Css.Active else ""),
+                .className(if (state.activeRotation == Rotation.Z) Css.Active else ""),
             onClick = { vm.onRotationSelected(Rotation.Z) }
         )
         Button(
             text = "z'",
             modifier = Modifier.className(Css.RotationButton)
-                               .className(if (state.activeRotation == Rotation.Zi) Css.Active else ""),
+                .className(if (state.activeRotation == Rotation.Zi) Css.Active else ""),
             onClick = { vm.onRotationSelected(Rotation.Zi) }
         )
     }
