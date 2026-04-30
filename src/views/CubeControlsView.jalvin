@@ -1,4 +1,6 @@
-import @jalvin/runtime.*
+package src.views
+
+import @jalvin/runtime.mutableStateOf
 import src.viewmodels.CubeNodeViewModel
 import src.views.MoveCounterView.MoveCounter
 import src.views.ModeToggleView.ModeToggle

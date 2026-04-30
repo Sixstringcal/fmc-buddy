@@ -14,7 +14,7 @@ import { CubeControlsView } from "./CubeControlsView";
 import { CubeInputView } from "./CubeInputView";
 import { Div, Button } from "../utils/ui";
 import { Css } from "../models/css";
-import { CubeViewIcon, CubeViewText, Display } from "../models/types";
+import { CubeViewIcon, CubeViewText, Display, BgColor } from "../models/types";
 
 export class CubeView {
   private readonly _vm: CubeNodeViewModel;
@@ -177,8 +177,18 @@ export class CubeView {
         this._preview.textContent = text;
       }
     });
-    this._controlsView.bindObservables(container);
+    this._controlsView.bindObservables();
     this._inputView.bindObservables(this._controlsView.getMoveCounterElement());
+
+    this._vm.isGood.subscribe((good) => {
+      if (good === true) {
+        container.style.backgroundColor = BgColor.Good;
+      } else if (good === false) {
+        container.style.backgroundColor = BgColor.Bad;
+      } else {
+        container.style.backgroundColor = BgColor.None;
+      }
+    });
   }
 
   private _renderMinimized(minimized: boolean, container: HTMLElement): void {

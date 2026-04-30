@@ -1,0 +1,24 @@
+package src.viewmodels
+
+import @jalvin/runtime.MutableStateFlow
+import @jalvin/runtime.StateFlow
+import @jalvin/runtime.ViewModel
+import src.models.Rotation
+import src.models.RotationButtonsState
+import src.viewmodels.CubeNodeViewModel
+import src.actions.cubeNodeActions.setSecretRotation
+
+class RotationButtonsViewModel(val cubeNodeVm: CubeNodeViewModel) : ViewModel() {
+    private val _uiState = MutableStateFlow(RotationButtonsState())
+    val uiState: StateFlow<RotationButtonsState> = this._uiState
+
+    fun onRotationSelected(rotation: Rotation) {
+        val current = this._uiState.value.activeRotation
+        val next = if (current == rotation) Rotation.None else rotation
+        
+        this._uiState.value = RotationButtonsState(next)
+        
+        // Sync the change to the core logic
+        setSecretRotation(this.cubeNodeVm, next.value)
+    }
+}

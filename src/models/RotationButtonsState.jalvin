@@ -1,0 +1,7 @@
+package src.models
+
+import src.models.Rotation
+
+class RotationButtonsState(
+    val activeRotation: Rotation = Rotation.None
+)

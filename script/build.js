@@ -32,11 +32,13 @@ const jalvinPlugin = {
       const source = fs.readFileSync(args.path, "utf8");
       const result = compile(source, args.path);
       if (!result.ok) {
-        const errors = result.diagnostics.all
-          .filter((d) => d.severity === "error")
+        console.error(`Jalvin compilation failed for ${args.path}`);
+        const errors = (result.diagnostics?.all || [])
+          .filter((d) => d && d.severity === "error")
           .map((d) => ({ text: d.message }));
-        return { errors };
+        return { errors: errors.length > 0 ? errors : [{ text: "Unknown Jalvin compilation error" }] };
       }
+
       // Jalvin emits `import { Symbol } from "src/a/b"` where "src/a/b" is the
       // module directory — but when the project uses one-file-per-class, there's
       // no index.ts. Fix it: if "src/a/b" is a directory (no .ts file beside it),

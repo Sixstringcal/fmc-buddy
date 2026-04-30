@@ -1,43 +1,44 @@
-import @jalvin/runtime.*
+package src.views
+
+import @jalvin/runtime.collectAsState
+import @jalvin/ui.Row
+import @jalvin/ui.Button
+import @jalvin/ui.Modifier
+import src.viewmodels.RotationButtonsViewModel
+import src.models.Rotation
 import src.models.css.Css
-import src.viewmodels.CubeNodeViewModel
-import src.actions.cubeNodeActions.setSecretRotation
-import src.consts.BLUE
-import src.utils.ui.Row
-import src.utils.ui.Button
 
-data class RotationOption(val label: String, val key: String)
+component fun RotationButtons(vm: RotationButtonsViewModel) {
+    val state = collectAsState(vm.uiState)
 
-val ROTATIONS = listOf(
-    RotationOption("x", "x"),
-    RotationOption("x'", "x'"),
-    RotationOption("z", "z"),
-    RotationOption("z'", "z'"),
-)
-
-component fun RotationButtons(vm: CubeNodeViewModel) {
-    val secretRotation = mutableStateOf(vm.secretRotation.get())
-
-    DisposableEffect(listOf(vm.secretRotation)) {
-        val unsub = vm.secretRotation.subscribe { active ->
-            secretRotation.value = active
-        }
-        { unsub() }
-    }
-
-    Row(classes = Css.RotationContainer) {
-        ROTATIONS.forEach { opt ->
-            val isActive = (opt.key == secretRotation.value)
-            Button(
-                text = opt.label,
-                classes = "\${Css.ButtonBase} \${Css.RotationButton}",
-                style = if (isActive) {
-                    "background-color: \${BLUE}; color: white;"
-                } else {
-                    "color: \${BLUE};"
-                },
-                onClick = { setSecretRotation(vm, opt.key) }
-            )
-        }
+    Row(
+        modifier = Modifier.className(Css.RotationContainer),
+        horizontalArrangement = "center",
+        spacing = 8
+    ) {
+        Button(
+            text = "x",
+            modifier = Modifier.className(Css.RotationButton)
+                               .className(if (state.activeRotation == Rotation.X) Css.Active else ""),
+            onClick = { vm.onRotationSelected(Rotation.X) }
+        )
+        Button(
+            text = "x'",
+            modifier = Modifier.className(Css.RotationButton)
+                               .className(if (state.activeRotation == Rotation.Xi) Css.Active else ""),
+            onClick = { vm.onRotationSelected(Rotation.Xi) }
+        )
+        Button(
+            text = "z",
+            modifier = Modifier.className(Css.RotationButton)
+                               .className(if (state.activeRotation == Rotation.Z) Css.Active else ""),
+            onClick = { vm.onRotationSelected(Rotation.Z) }
+        )
+        Button(
+            text = "z'",
+            modifier = Modifier.className(Css.RotationButton)
+                               .className(if (state.activeRotation == Rotation.Zi) Css.Active else ""),
+            onClick = { vm.onRotationSelected(Rotation.Zi) }
+        )
     }
 }

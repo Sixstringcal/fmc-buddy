@@ -1,0 +1,11 @@
+package src.models
+
+enum class Rotation(val value: String) {
+    None(""),
+    X("x"),
+    Xi("x'"),
+    Y("y"),
+    Yi("y'"),
+    Z("z"),
+    Zi("z'")
+}

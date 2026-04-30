@@ -1,4 +1,8 @@
-import @jalvin/runtime.*
+package src.views
+
+import @jalvin/runtime.mutableStateOf
+import @jalvin/runtime.DisposableEffect
+import @jalvin/runtime.listOf
 import src.viewmodels.CubeNodeViewModel
 import src.models.css.Css
 import src.models.types.MoveCounterText

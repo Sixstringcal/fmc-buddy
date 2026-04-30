@@ -1,58 +1,33 @@
+package src.views
+
+import @jalvin/runtime.collectAsState
+import @jalvin/ui.Row
+import @jalvin/ui.Button
+import @jalvin/ui.Modifier
 import src.viewmodels.CubeNodeViewModel
 import src.actions.cubeNodeActions.markAsGood
 import src.actions.cubeNodeActions.markAsBad
 import src.models.css.Css
-import src.models.types.BgColor
 import src.models.types.RatingIcon
 import src.consts.Spacing
-import @jalvin/ui.Row
-import @jalvin/ui.Button
-import @jalvin/ui.Modifier
 
-class RatingButtonsView {
-    private var _vm: CubeNodeViewModel
-    private var _upBtn: HTMLButtonElement
-    private var _dnBtn: HTMLButtonElement
-    private var _wrapper: HTMLElement
+component fun RatingButtons(vm: CubeNodeViewModel) {
+    val isGood = collectAsState(vm.isGood)
 
-    constructor(vm: CubeNodeViewModel) {
-        this._vm = vm
-        this._upBtn = Button(
-            innerHTML = RatingIcon.ThumbsUp,
-            modifier = Modifier.className("${Css.RatingButton} ${Css.ThumbsUp}").marginRight(Spacing.MD),
-            onClick = { markAsGood(this._vm) }
+    Row(
+        modifier = Modifier.className(Css.RatingWrapper).marginTop(Spacing.MD),
+        horizontalArrangement = "center"
+    ) {
+        Button(
+            text = RatingIcon.ThumbsUp,
+            modifier = Modifier.className("${Css.RatingButton} ${Css.ThumbsUp} ${if (isGood == true) Css.Active else ""}")
+                               .marginRight(Spacing.MD),
+            onClick = { markAsGood(vm) }
         )
-        this._dnBtn = Button(
-            innerHTML = RatingIcon.ThumbsDown,
-            modifier = Modifier.className("${Css.RatingButton} ${Css.ThumbsDown}"),
-            onClick = { markAsBad(this._vm) }
+        Button(
+            text = RatingIcon.ThumbsDown,
+            modifier = Modifier.className("${Css.RatingButton} ${Css.ThumbsDown} ${if (isGood == false) Css.Active else ""}"),
+            onClick = { markAsBad(vm) }
         )
-        this._wrapper = Row(
-            modifier = Modifier.className(Css.RatingWrapper).marginTop(Spacing.MD),
-            horizontalArrangement = "center"
-        ) {
-            this._upBtn
-            this._dnBtn
-        }
-    }
-
-    fun appendTo(parent: HTMLElement) {
-        parent.appendChild(this._wrapper)
-    }
-
-    fun bindObservables(container: HTMLElement) {
-        this._vm.isGood.subscribe { good ->
-            this._upBtn.classList.remove(Css.Active)
-            this._dnBtn.classList.remove(Css.Active)
-            if (good === true) {
-                container.style.backgroundColor = BgColor.Good
-                this._upBtn.classList.add(Css.Active)
-            } else if (good === false) {
-                container.style.backgroundColor = BgColor.Bad
-                this._dnBtn.classList.add(Css.Active)
-            } else {
-                container.style.backgroundColor = BgColor.None
-            }
-        }
     }
 }
