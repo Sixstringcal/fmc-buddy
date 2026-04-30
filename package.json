@@ -7,14 +7,14 @@
     "upgrade-cubing": "npm install --save cubing@latest"
   },
   "dependencies": {
-    "@jalvin/runtime": "^2.0.10",
-    "@jalvin/ui": "^2.0.10",
+    "@jalvin/runtime": "^2.0.11",
+    "@jalvin/ui": "^2.0.11",
     "cubing": "^0.54.4",
     "react": "^19.2.5",
     "react-dom": "^19.2.5"
   },
   "devDependencies": {
-    "@jalvin/compiler": "^2.0.10",
+    "@jalvin/compiler": "^2.0.11",
     "@types/node": "^22.13.13",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
