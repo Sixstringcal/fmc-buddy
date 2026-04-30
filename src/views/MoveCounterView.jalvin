@@ -1,25 +1,23 @@
 package src.views
 
+import @jalvin/runtime.collectAsState
 import @jalvin/runtime.mutableStateOf
 import @jalvin/runtime.DisposableEffect
 import @jalvin/runtime.listOf
 import src.viewmodels.CubeNodeViewModel
 import src.models.css.Css
 import src.models.types.MoveCounterText
-import src.utils.ui.Div
+import @jalvin/ui.Text
+import @jalvin/ui.Modifier
 
 component fun MoveCounter(vm: CubeNodeViewModel) {
-    val moveCount = mutableStateOf(vm.moveCount.get())
+    val moveCount = collectAsState(vm.moveCount)
+    val isEOView = collectAsState(vm.isEOView)
 
-    DisposableEffect(listOf(vm.moveCount)) {
-        val unsub = vm.moveCount.subscribe { count ->
-            moveCount.value = count
-        }
-        { unsub() }
+    if (!isEOView) {
+        Text(
+            text = "\${MoveCounterText.Prefix}\${moveCount}",
+            modifier = Modifier.className(Css.MoveCounter)
+        )
     }
-
-    Div(
-        classes = Css.MoveCounter,
-        text = "\${MoveCounterText.Prefix}\${moveCount.value}"
-    )
 }

@@ -40,18 +40,16 @@ export class EOListView {
     return this._wrapper;
   }
 
-  toggle(isEO: boolean, textarea: HTMLTextAreaElement, counter: HTMLElement): void {
+  toggle(isEO: boolean, textarea: HTMLTextAreaElement): void {
     if (isEO) {
       textarea.style.display = Display.None;
       if (this._wrapper) this._wrapper.style.display = Display.Default;
       this._eoSwitch.setChecked(true);
-      counter.style.display = Display.None;
       if (this._vm.eoList.get().length === 0) addEOEntry(this._vm);
     } else {
       textarea.style.display = Display.Default;
       if (this._wrapper) this._wrapper.style.display = Display.None;
       this._eoSwitch.setChecked(false);
-      counter.style.display = Display.Default;
     }
 
     this.render();
@@ -102,11 +100,10 @@ export class EOListView {
 
   bindObservables(
     textarea: HTMLTextAreaElement,
-    counter: HTMLElement,
     onPreview?: (alg: string) => void,
   ): void {
     this._onPreview = onPreview;
-    this._vm.isEOView.subscribe((isEO) => this.toggle(isEO, textarea, counter));
+    this._vm.isEOView.subscribe((isEO) => this.toggle(isEO, textarea));
     const renderEO = () => this.render();
     this._vm.sortedEOList.subscribe(renderEO);
     this._vm.selectedEOIndex.subscribe(renderEO);

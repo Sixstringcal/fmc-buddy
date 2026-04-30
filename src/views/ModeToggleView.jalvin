@@ -1,6 +1,7 @@
 package src.views
 
 import @jalvin/runtime.mutableStateOf
+import @jalvin/runtime.collectAsState
 import @jalvin/runtime.DisposableEffect
 import @jalvin/runtime.listOf
 import src.viewmodels.CubeNodeViewModel
@@ -9,22 +10,17 @@ import src.consts.BLUE
 import src.consts.ORANGE
 import src.models.css.Css
 import src.models.types.ModeText
-import src.utils.ui.Button
+import @jalvin/ui.Button
+import @jalvin/ui.Modifier
 
 component fun ModeToggle(vm: CubeNodeViewModel) {
-    val isNormal = mutableStateOf(vm.isNormal.get())
-
-    DisposableEffect(listOf(vm.isNormal)) {
-        val unsub = vm.isNormal.subscribe { normal ->
-            isNormal.value = normal
-        }
-        { unsub() }
-    }
+    val isNormal = collectAsState(vm.isNormal)
 
     Button(
-        text = if (isNormal.value) ModeText.Normal else ModeText.Inverse,
-        classes = "\${Css.ButtonBase} \${Css.ToggleButton}",
-        style = "background-color: \${if (isNormal.value) BLUE else ORANGE}; color: white;",
+        text = if (isNormal) ModeText.Normal else ModeText.Inverse,
+        modifier = Modifier.className("${Css.ButtonBase} ${Css.ToggleButton}")
+                           .background(if (isNormal) BLUE else ORANGE)
+                           .color("white"),
         onClick = { toggleMode(vm) }
     )
 }

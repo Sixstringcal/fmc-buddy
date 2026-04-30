@@ -73,10 +73,9 @@ export class CubeInputView {
     }));
   }
 
-  bindObservables(counter: HTMLElement): void {
+  bindObservables(): void {
     this._eoListView.bindObservables(
       this._textareaView.getElement(),
-      counter,
       (alg) => { this._twistyPlayer.alg = alg; },
     );
   }

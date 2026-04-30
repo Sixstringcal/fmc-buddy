@@ -10,6 +10,10 @@ export class Observable<T> {
         return this._value;
     }
 
+    get value(): T {
+        return this._value;
+    }
+
     set(next: T): void {
         if (Object.is(this._value, next)) return;
         this._value = next;
@@ -22,6 +26,12 @@ export class Observable<T> {
     }
 
     subscribe(subscriber: (value: T) => void): () => void {
+        this._subscribers.add(subscriber);
+        subscriber(this._value);
+        return () => this._subscribers.delete(subscriber);
+    }
+
+    collect(subscriber: (value: T) => void): () => void {
         this._subscribers.add(subscriber);
         subscriber(this._value);
         return () => this._subscribers.delete(subscriber);

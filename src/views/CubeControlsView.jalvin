@@ -1,15 +1,24 @@
 package src.views
 
-import @jalvin/runtime.mutableStateOf
+import @jalvin/runtime.useViewModel
+import @jalvin/ui.Modifier
+import @jalvin/ui.Column
 import src.viewmodels.CubeNodeViewModel
+import src.viewmodels.RotationButtonsViewModel
 import src.views.MoveCounterView.MoveCounter
 import src.views.ModeToggleView.ModeToggle
 import src.views.RotationButtonsView.RotationButtons
 import src.views.RatingButtonsView.RatingButtons
 
-component fun CubeControls(vm: CubeNodeViewModel) {
-    MoveCounter(vm)
-    ModeToggle(vm)
-    RotationButtons(vm)
-    RatingButtons(vm)
+component fun CubeControlsView(vm: CubeNodeViewModel) {
+    val rotationVm = useViewModel("RotationVm-${vm.id}", { 
+        RotationButtonsViewModel(vm) 
+    })
+    
+    Column(modifier = Modifier.fillMaxWidth()) {
+        MoveCounter(vm)
+        ModeToggle(vm)
+        RotationButtons(rotationVm)
+        RatingButtons(vm)
+    }
 }

@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import { compile } from '@jalvin/compiler';
 
-const file = 'src/views/RotationButtonsView.jalvin';
+const file = 'src/views/CubeControlsView.jalvin';
 const source = fs.readFileSync(file, 'utf8');
 const result = compile(source, file);
 if (result.ok) {

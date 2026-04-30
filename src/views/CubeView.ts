@@ -1,3 +1,5 @@
+import { createElement } from "react";
+import { createRoot } from "react-dom/client";
 import { TwistyPlayer } from "cubing/twisty";
 import { Connection } from "../Connection";
 import { CubeNodeViewModel } from "../viewmodels/CubeNodeViewModel";
@@ -31,8 +33,10 @@ export class CubeView {
 
   private _sourceConnections: Connection[] = [];
   private _targetConnections: Connection[] = [];
-  private _controlsView!: CubeControlsView;
+  private _controlsView!: any;
   private _inputView!: CubeInputView;
+
+  private _controlsRoot: any = null;
 
   private static _connectionsLoaded = false;
   private static _registry = new Map<string, CubeView>();
@@ -59,8 +63,10 @@ export class CubeView {
     this._colWrap = Div({ classes: Css.ColumnWrapper });
     container.appendChild(this._colWrap);
 
-    this._controlsView = new CubeControlsView(this._vm);
-    this._controlsView.appendTo(this._colWrap);
+    const controlsContainer = document.createElement("div");
+    this._colWrap.appendChild(controlsContainer);
+    this._controlsRoot = createRoot(controlsContainer);
+    this._controlsRoot.render(createElement(CubeControlsView, { vm: this._vm }));
 
     container.insertBefore(this._twistyPlayer, this._colWrap);
 
@@ -177,8 +183,7 @@ export class CubeView {
         this._preview.textContent = text;
       }
     });
-    this._controlsView.bindObservables();
-    this._inputView.bindObservables(this._controlsView.getMoveCounterElement());
+    this._inputView.bindObservables();
 
     this._vm.isGood.subscribe((good) => {
       if (good === true) {
