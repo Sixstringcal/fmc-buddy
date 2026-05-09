@@ -1,3 +1,5 @@
+import { createElement } from "react";
+import { createRoot, Root } from "react-dom/client";
 import { TimerViewModel } from "../viewmodels/TimerViewModel";
 import { TimerSnapshot } from "../models/types";
 import { TimerDisplayView } from "./TimerDisplayView";
@@ -8,7 +10,7 @@ import { Css } from "../models/css";
 export class TimerView {
     private readonly _vm: TimerViewModel;
     private readonly _container: HTMLElement;
-    private readonly _display: TimerDisplayView;
+    private readonly _displayRoot: Root;
     private readonly _controls: TimerControlsView;
     private readonly _scrambleEl: HTMLElement;
 
@@ -18,8 +20,9 @@ export class TimerView {
 
         this._container = Div({ classes: Css.CountdownTimer });
 
-        this._display = new TimerDisplayView();
-        this._display.appendTo(this._container);
+        const displayContainer = document.createElement("span");
+        this._container.appendChild(displayContainer);
+        this._displayRoot = createRoot(displayContainer);
 
         this._controls = new TimerControlsView(vm);
         this._controls.appendTo(this._container);
@@ -39,7 +42,7 @@ export class TimerView {
     }
 
     private _render(snap: TimerSnapshot): void {
-        this._display.render(snap);
+        this._displayRoot.render(createElement(TimerDisplayView, { snap }));
         this._controls.render(snap);
     }
 

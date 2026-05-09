@@ -1,0 +1,11 @@
+package src.views
+
+import src.models.types.TimerSnapshot
+import @jalvin/ui.Text
+import @jalvin/ui.Modifier
+
+component fun TimerDisplayView(snap: TimerSnapshot) {
+    Text(
+        text = snap.displayTime
+    )
+}
