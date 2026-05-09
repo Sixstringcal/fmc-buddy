@@ -1,6 +1,6 @@
 import { Observable } from "../core/Observable";
 import { ViewModel } from "../core/ViewModel";
-import { CubeNodeState } from "../models/types";
+import { CubeNodeState, Position, TextboxDimensions } from "../models/types";
 import {
     countMoves,
     invertMoves,
@@ -79,19 +79,21 @@ export class CubeNodeViewModel extends ViewModel {
     }
 
     toState(): CubeNodeState {
-        return {
-            id: this.id,
-            moves: this.rawMoves.get(),
-            position: this.position.get(),
-            isMinimized: this.isMinimized.get(),
-            isNormal: this.isNormal.get(),
-            secretRotation: this.secretRotation.get(),
-            isGood: this.isGood.get(),
-            textboxDimensions: this.textboxDimensions.get(),
-            isEOView: this.isEOView.get(),
-            eoList: [...this.eoList.get()],
-            selectedEOIndex: this.selectedEOIndex.get(),
-        };
+        const pos = this.position.get();
+        const dims = this.textboxDimensions.get();
+        return new CubeNodeState(
+            this.id,
+            this.rawMoves.get(),
+            new Position(pos.left, pos.top),
+            this.isMinimized.get(),
+            this.isNormal.get(),
+            this.secretRotation.get(),
+            this.isGood.get(),
+            dims ? new TextboxDimensions(dims.width, dims.height) : null,
+            this.isEOView.get(),
+            [...this.eoList.get()],
+            this.selectedEOIndex.get(),
+        );
     }
 
     private _recompute(): void {

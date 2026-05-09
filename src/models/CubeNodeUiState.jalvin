@@ -1,0 +1,24 @@
+package src.models
+
+import @jalvin/runtime.listOf
+
+class CubeNodeUiState(
+    val id: String,
+    val scramble: String = "",
+    val rawMoves: String = "",
+    val isNormal: Boolean = true,
+    val isMinimized: Boolean = false,
+    val secretRotation: String = "",
+    val isGood: Boolean? = null,
+    val positionLeft: Int = 100,
+    val positionTop: Int = 100,
+    val textboxWidth: Int? = null,
+    val textboxHeight: Int? = null,
+    val isEOView: Boolean = false,
+    val eoList: List<String> = listOf(),
+    val selectedEOIndex: Int = 0,
+    val moveCount: Int = 0,
+    val playerAlg: String = "",
+    val previewText: String = "(Empty)",
+    val sortedEOList: List<SortedEOEntry> = listOf()
+)

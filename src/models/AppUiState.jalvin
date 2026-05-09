@@ -1,0 +1,11 @@
+package src.models
+
+import @jalvin/runtime.listOf
+import src.viewmodels.CubeNodeViewModel
+import src.models.types.ConnectionRecord
+
+class AppUiState(
+    val cubeNodes: List<CubeNodeViewModel> = listOf(),
+    val connections: List<ConnectionRecord> = listOf(),
+    val isReady: Boolean = false
+)

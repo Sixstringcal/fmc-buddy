@@ -1,24 +1,27 @@
 {
-  "type": "module",
   "scripts": {
-    "build": "node script/build.js",
-    "dev": "node script/build.js -- --dev",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "clean": "rm -rf ./dist",
     "upgrade-cubing": "npm install --save cubing@latest"
   },
   "dependencies": {
-    "@jalvin/runtime": "^2.0.11",
-    "@jalvin/ui": "^2.0.11",
+    "@jalvin/runtime": "2.0.32",
+    "@jalvin/ui": "2.0.32",
     "cubing": "^0.54.4",
     "react": "^19.2.5",
     "react-dom": "^19.2.5"
   },
   "devDependencies": {
-    "@jalvin/compiler": "^2.0.11",
+    "@jalvin/compiler": "2.0.32",
+    "@jalvin/vite-plugin": "2.0.32",
     "@types/node": "^22.13.13",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "barely-a-dev-server": "^0.7.0",
-    "http-server": "^14.1.1"
+    "@vitejs/plugin-react": "^4.3.4",
+    "esbuild": "^0.28.0",
+    "http-server": "^14.1.1",
+    "vite": "^6.2.0"
   }
 }

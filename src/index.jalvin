@@ -1,0 +1,78 @@
+package src
+
+import @jalvin/runtime.collectAsState
+import @jalvin/runtime.useViewModel
+import @jalvin/runtime.LaunchedEffect
+import @jalvin/runtime.DisposableEffect
+import @jalvin/runtime.listOf
+import @jalvin/ui.Box
+import @jalvin/ui.Modifier
+import @jalvin/ui.Text
+import @jalvin/ui.Button
+import src.viewmodels.AppViewModel
+import src.views.ScrambleView.ScrambleView
+import src.views.TimerView.TimerView
+
+import src.views.CubeView.CubeView
+import src.views.ConnectionView.ConnectionView
+
+component fun ConnectionLayer(appVm: AppViewModel) {
+    val state = collectAsState(appVm.uiState)
+
+    state.connections.map { conn ->
+        val source = state.cubeNodes.find { it.id == conn.sourceId }
+        val target = state.cubeNodes.find { it.id == conn.targetId }
+
+        if (source != null && target != null) {
+            ConnectionView(source = source, target = target)
+        } else {
+            null
+        }
+    }
+}
+
+component fun CubeLayer(appVm: AppViewModel) {
+    val state = collectAsState(appVm.uiState)
+    state.cubeNodes.map { nodeVm ->
+        CubeView(vm = nodeVm, appVm = appVm)
+    }
+}
+
+component fun App() {
+    val appVm = useViewModel("AppVm", { AppViewModel() })
+    val state = collectAsState(appVm.uiState)
+
+    LaunchedEffect(listOf(), {
+        appVm.bootstrap()
+    })
+
+    DisposableEffect(listOf(), {
+        {
+            appVm.reset()
+        }
+    })
+
+    if (!state.isReady) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Text(text = "Loading...")
+        }
+    } else {
+        Box(modifier = Modifier.fillMaxSize().background("white").minHeight("100vh")) {
+            Box(modifier = Modifier.Default) {
+                ConnectionLayer(appVm)
+            }
+            ScrambleView(vm = appVm.scrambleVm)
+            TimerView(vm = appVm.timerVm)
+            Box(modifier = Modifier.Default) {
+                CubeLayer(appVm)
+            }
+
+            Button(
+                text = "+",
+                modifier = Modifier.className("add-button").position("fixed").bottom(20).right(20),
+                onClick = { appVm.createCubeNode() }
+            )
+        }
+    }
+}
+

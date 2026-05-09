@@ -1,0 +1,195 @@
+package src.models.types
+
+import @jalvin/runtime.listOf
+
+class Position(
+    val left: Int,
+    val top: Int
+)
+
+class TextboxDimensions(
+    val width: Int,
+    val height: Int
+)
+
+class CubeNodeState(
+    val id: String,
+    val moves: String,
+    val position: Position,
+    val isMinimized: Boolean,
+    val isNormal: Boolean,
+    val secretRotation: String,
+    val isGood: Boolean?,
+    val textboxDimensions: TextboxDimensions?,
+    val isEOView: Boolean,
+    val eoList: List<String>,
+    val selectedEOIndex: Int
+)
+
+fun createDefaultCubeNodeState(id: String): CubeNodeState {
+    return CubeNodeState(
+        id = id,
+        moves = "",
+        position = Position(100, 100),
+        isMinimized = false,
+        isNormal = true,
+        secretRotation = "",
+        isGood = null,
+        textboxDimensions = null,
+        isEOView = false,
+        eoList = listOf(),
+        selectedEOIndex = 0
+    )
+}
+
+class ConnectionRecord(
+    val sourceId: String,
+    val targetId: String
+)
+
+enum class TimerStatus(val value: String) {
+    Idle("idle"),
+    Running("running"),
+    Paused("paused"),
+    Expired("expired")
+}
+
+enum class PlayPauseState(val value: String) {
+    Play("play"),
+    Pause("pause")
+}
+
+class TimerSnapshot(
+    val remainingSeconds: Int,
+    val totalSeconds: Int,
+    val status: TimerStatus,
+    val displayTime: String,
+    val playPauseState: PlayPauseState,
+    val showRestart: Boolean
+)
+
+class APP_STATE_KEYS {
+    companion object {
+        val scramble = "scramble"
+        val cubeViewCount = "cubeViewCount"
+        val cubeViewIds = "cubeViewIds"
+        val cubeViewConnections = "cubeViewConnections"
+        val cubeViewPrefix = "cubeView_"
+    }
+}
+
+class Display {
+    companion object {
+        val None = "none"
+        val Default = ""
+        val Block = "block"
+        val InlineBlock = "inline-block"
+    }
+}
+
+class Key {
+    companion object {
+        val Enter = "Enter"
+        val Escape = "Escape"
+    }
+}
+
+class Asset {
+    companion object {
+        val PlaySvg = "src/assets/play.svg"
+        val PauseSvg = "src/assets/pause.svg"
+        val RestartSvg = "src/assets/restart.svg"
+    }
+}
+
+class BgColor {
+    companion object {
+        val Good = "lightgreen"
+        val Bad = "lightcoral"
+        val None = ""
+    }
+}
+
+class CubeViewIcon {
+    companion object {
+        val Drag = "&#x2807;"
+        val Minimize = "\u2212"
+        val Maximize = "+"
+        val Delete = "\u00d7"
+    }
+}
+
+class CubeViewText {
+    companion object {
+        val DeleteTitle = "Delete this cube view"
+        val DeleteConfirm = "Are you sure you want to delete this cube view?"
+    }
+}
+
+class CubeInputText {
+    companion object {
+        val DuplicateIcon = "+"
+        val DuplicateTitle = "Duplicate this cube view"
+        val FinishIcon = "\u2714"
+        val FinishTitle = "Finish this cube view"
+    }
+}
+
+class ScrambleRefreshText {
+    companion object {
+        val FallbackIcon = "\u21ba"
+        val Title = "New scramble / Reset all"
+        val ConfirmRestart = "Are you sure you want to restart?"
+    }
+}
+
+class ScrambleInverseText {
+    companion object {
+        val Show = "Show inverse"
+        val Hide = "Hide inverse"
+        val Title = "Toggle inverse scramble"
+        val Prefix = "Inverse: "
+    }
+}
+
+class MoveCounterText {
+    companion object {
+        val Prefix = "Moves: "
+    }
+}
+
+class RatingIcon {
+    companion object {
+        val ThumbsUp = "\uD83D\uDC4D"
+        val ThumbsDown = "\uD83D\uDC4E"
+    }
+}
+
+class ModeText {
+    companion object {
+        val Normal = "Normal"
+        val Inverse = "Inverse"
+    }
+}
+
+class ScrambleEditIcon {
+    companion object {
+        val Edit = "\u270F\uFE0F"
+        val Commit = "\u2714\uFE0F"
+    }
+}
+
+class EOSwitchText {
+    companion object {
+        val Label = "EO"
+        val Title = "Toggle EO View"
+    }
+}
+
+class EOListText {
+    companion object {
+        val Placeholder = "(Double click to edit)"
+        val AddIcon = "+"
+        val AddTitle = "Add EO"
+    }
+}

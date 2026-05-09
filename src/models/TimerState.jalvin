@@ -1,0 +1,13 @@
+package src.models
+
+import src.models.types.TimerStatus
+import src.models.types.PlayPauseState
+
+class TimerState(
+    val remainingSeconds: Int = 0,
+    val totalSeconds: Int = 0,
+    val status: TimerStatus = TimerStatus.Idle,
+    val displayTime: String = "00:00",
+    val playPauseState: PlayPauseState = PlayPauseState.Play,
+    val showRestart: Boolean = false
+)

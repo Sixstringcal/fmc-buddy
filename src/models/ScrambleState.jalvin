@@ -1,0 +1,7 @@
+package src.models
+
+class ScrambleState(
+    val scramble: String = "",
+    val showingInverse: Boolean = false,
+    val inverseScramble: String = ""
+)

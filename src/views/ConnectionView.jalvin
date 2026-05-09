@@ -1,0 +1,33 @@
+package src.views
+
+import @jalvin/runtime.collectAsState
+import @jalvin/ui.Canvas
+import @jalvin/ui.Modifier
+import src.viewmodels.CubeNodeViewModel
+
+component fun ConnectionView(source: CubeNodeViewModel, target: CubeNodeViewModel) {
+    val sourceState = collectAsState(source.uiState)
+    val targetState = collectAsState(target.uiState)
+
+    // Calculate line coordinates from ViewModel positions
+    // assuming center of cube (300x200)
+    val x1 = (sourceState.positionLeft + 150).toDouble()
+    val y1 = (sourceState.positionTop + 100).toDouble()
+    val x2 = (targetState.positionLeft + 150).toDouble()
+    val y2 = (targetState.positionTop + 100).toDouble()
+
+    Canvas(
+        width = window.innerWidth,
+        height = window.innerHeight,
+        modifier = Modifier.position("fixed").top(0).left(0)
+            .style("pointer-events: none; z-index: 0;"),
+        draw = (ctx, canvas) => {
+            ctx.strokeStyle = "#4caf50"
+            ctx.lineWidth = 2
+            ctx.beginPath()
+            ctx.moveTo(x1, y1)
+            ctx.lineTo(x2, y2)
+            ctx.stroke()
+        }
+    )
+}

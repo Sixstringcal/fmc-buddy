@@ -1,0 +1,6 @@
+package src.models
+
+class SortedEOEntry(
+    val eo: String,
+    val idx: Int
+)
