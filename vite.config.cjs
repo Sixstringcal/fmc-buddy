@@ -19,6 +19,7 @@ module.exports = defineConfig({
   },
   build: {
     target: "esnext",
+    outDir: "dist/web",
   },
   worker: {
     format: "es",
